@@ -1,8 +1,6 @@
 # assets.sh
 Bash script used to automate asset discovery when doing recon. Output will be created and saved in: `~/targets/<domain>`.
 
-Consider the following script to install all tools and dependencies needed for this script: https://github.com/mr-n30/server_setup_script
-
 # Tools used:
 - [amass](https://github.com/OWASP/Amass)
 - [sublist3r](https://github.com/aboul3la/Sublist3r)
