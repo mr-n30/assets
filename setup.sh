@@ -2,16 +2,17 @@
 
 # Update the system
 apt update && apt full-upgrade -y && apt autoremove -y
-
-# Install nmap, masscan, firefox, python, chromium-browser, and go
-apt update && apt install -y nmap masscan firefox python3-pip golang chromium-browser python python-pip
-
-# cd into install directory
-cd /opt
+sleep 3
 
 ############
 # INSTALLS #
 ############
+
+# Install from repo
+apt install -y nmap masscan firefox python3-pip golang chromium-browser python ssmtp
+
+# cd into install directory
+cd /opt
 
 # Clone sublist3r
 git clone https://github.com/aboul3la/Sublist3r.git
@@ -22,12 +23,12 @@ ln -sf /opt/Sublist3r/sublist3r.py /usr/bin/sublist3r
 # Go back to install directory
 cd /opt
 
-# Clone dirsearch
-git clone https://github.com/maurosoria/dirsearch.git
-ln -sf /opt/dirsearch/dirsearch.py /usr/bin/dirsearch
-
 # Go back to install directory
 cd /opt
+
+# Clone geturls
+git clone https://github.com/mr-n30/geturls
+ln -sf /opt/geturls/geturls.py /usr/bin/geturls
 
 # Go back to install directory
 cd /opt
@@ -39,7 +40,13 @@ cd massdns && make
 # Install amass
 snap install amass && sudo snap refresh
 
+# Install altdns
+pip3 install py-altdns
+
+# Install ffuf
+go get github.com/ffuf/ffuf
+mv ~/go/ ~/ffuf/ && mv ~/ffuf/ /opt/ && ln -sf /opt/ffuf/bin/ffuf /usr/bin/ffuf
+
 # Finished
 echo "[+] Tools installed into: /opt"
-echo "[+] TODO: install aquatone and subfinder"
 echo "[+] Done."
