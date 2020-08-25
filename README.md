@@ -1,5 +1,5 @@
 # assets.sh
-Bash script used to automate asset discovery when doing recon. The output will be created and saved in: `~/targets/<domain>`.
+Bash script used to automate asset discovery when doing recon. Output will be saved in: `~/targets/<domain>`.
 
 # Tools used:
 - [amass](https://github.com/OWASP/Amass)
