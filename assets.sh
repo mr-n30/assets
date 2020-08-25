@@ -39,10 +39,6 @@ amass enum -d $DOMAIN -o $OUTPUT_DIR/amass-output.txt -brute -active;
 echo -e "$GREEN$BOLD[+] Running: sublist3r$END$END";
 sublist3r -d $DOMAIN -o $OUTPUT_DIR/sublist3r-output.txt;
 
-# subfinder
-echo -e "$GREEN$BOLD[+] Running: subfinder$END$END";
-subfinder -d $DOMAIN -o $OUTPUT_DIR/subfinder-output.txt;
-
 # bufferover.run
 curl -s "https://dns.bufferover.run/dns?q=.$DOMAIN" | jq -r ".FDNS_A[]" | cut -d',' -f2 | sort -u | tee -a $OUTPUT_DIR/bufferover.run-output.txt
 
@@ -52,12 +48,11 @@ curl "https://crt.sh/?q=%.$DOMAIN&output=json" | jq ".[].name_value" | sed "s/\"
 # Go into "target" directory
 cd $OUTPUT_DIR/;
 
-## Sort the data into one file
+# Sort the data into one file
 echo -e "$GREEN$BOLD[+] Cleaning output and sorting into one file: all.txt$END$END";
 cat *.txt | sort -u | tee -a all.txt
 
-## Nmap scan
-## Check for hosts that are up using nmap
+# Nmap scan
 echo -e "$GREEN$BOLD[+] Checking for live host(s)$END$END";
 cd $OUTPUT_DIR/;
 mkdir nmap;
@@ -65,9 +60,9 @@ echo -e "$GREEN$BOLD[+] Running: nmap$END$END";
 nmap -Pn -n -T4 -sS --min-rate=1000 -v -oA $OUTPUT_DIR/nmap/nmap-output -iL $OUTPUT_DIR/all.txt
 
 ## Screenshot
-echo -e "$GREEN$BOLD[+] Running: aquatone$END$END";
-mkdir $OUTPUT_DIR/aquatone-nmap
-aquatone -chrome-path /usr/bin/chromium-browser -out $OUTPUT_DIR/aquatone-nmap -nmap < $OUTPUT_DIR/nmap/nmap-output.xml
+#echo -e "$GREEN$BOLD[+] Running: aquatone$END$END";
+#mkdir $OUTPUT_DIR/aquatone-nmap
+#aquatone -chrome-path /usr/bin/chromium-browser -out $OUTPUT_DIR/aquatone-nmap -nmap < $OUTPUT_DIR/nmap/nmap-output.xml
 
 ## Done
 echo -e "$INVERTED$GREEN$BOLD[+] Contents in: $OUTPUT_DIR/$END$END$END";
