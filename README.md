@@ -6,10 +6,10 @@ Consider the following script to install all tools and dependencies needed for t
 # Tools used:
 - [amass](https://github.com/OWASP/Amass)
 - [sublist3r](https://github.com/aboul3la/Sublist3r)
-- [subfinder](https://github.com/subfinder/subfinder)
 - [massdns](https://github.com/blechschmidt/massdns/tree/v0.2)
 - [nmap](https://nmap.org/)
-- [aquatone](https://github.com/michenriksen/aquatone)
+- [geturls](https://github.com/mr-n30/geturls)
+- [ffuf](https://github.com/ffuf/ffuf)
 
 # Installation:
 ```bash
