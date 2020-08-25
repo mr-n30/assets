@@ -8,6 +8,7 @@ Bash script used to automate asset discovery when doing recon. Output will be sa
 - [nmap](https://nmap.org/)
 - [geturls](https://github.com/mr-n30/geturls)
 - [ffuf](https://github.com/ffuf/ffuf)
+- [altdns](https://github.com/infosec-au/altdns)
 
 # Installation:
 ```bash
