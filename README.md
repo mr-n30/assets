@@ -4,6 +4,7 @@ Bash script used to automate asset discovery when doing recon. Output will be sa
 # Tools used:
 - [amass](https://github.com/OWASP/Amass)
 - [sublist3r](https://github.com/aboul3la/Sublist3r)
+- [subfinder](https://github.com/projectdiscovery/subfinder)
 - [massdns](https://github.com/blechschmidt/massdns/tree/v0.2)
 - [nmap](https://nmap.org/)
 - [geturls](https://github.com/mr-n30/geturls)
