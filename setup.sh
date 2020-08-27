@@ -4,7 +4,7 @@
 apt update \
 && apt full-upgrade -y \
 && apt autoremove -y \
-&& apt install -y nmap masscan make firefox python3-pip python-pip python chromium-browser ssmtp \
+&& apt install -y nmap masscan make firefox python3-pip python-pip python chromium-browser ssmtp jq \
 && sleep 5
 
 ############
