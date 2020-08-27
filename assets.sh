@@ -72,6 +72,7 @@ cat *.txt \
 
 # Create wordlist for altdns
 mkdir altdns/;
+echo $DOMAIN > altdns/subdomains.txt;
 sed "s/$DOMAIN//g" all.txt \
 | sed 's/\./\n/g' \
 | sed '/^$/d' \
