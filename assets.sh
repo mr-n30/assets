@@ -75,7 +75,7 @@ echo -e "$GREEN$BOLD[+] Running: altdns$END$END";
 mkdir altdns/ \
 && cd altdns/ \
 && echo $DOMAIN > subdomains.txt \
-&& sed "s/$DOMAIN//g" ../all.txt \
+&& sed "s/$DOMAIN//g" ../all-base.txt \
 | sed 's/\./\n/g' \
 | sed '/^$/d' \
 | sort -u > words.txt \
