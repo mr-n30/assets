@@ -87,18 +87,18 @@ mkdir altdns/ \
 # massdns
 echo -e "$GREEN$BOLD[+] Running: massdns$END$END";
 massdns -o S -r /opt/massdns/lists/resolvers.txt -w ../massdns-output.txt all.txt \
-&& sed 's/\s.*//g' massdns-output.txt \
-&& sed 's/\.$//g' massdns-output.txt \
+&& sed 's/\s.*//g' ../massdns-output.txt \
+| sed 's/\.$//g' > ../massdns-output-clean.txt \
 && cd $OUTPUT_DIR;
 
 # Sort subdomains one last time
 echo -e "$GREEN$BOLD[+] Cleaning output and sorting into one file: all.txt$END$END";
-cat all-base.txt massdns-output.txt \
+cat all-base.txt massdns-output-clean.txt \
 | sort -u \
 | tee -a all.txt;
 
 # geturls
-geturls -t 50 -o geturls/ -f all.txt \
+geturls -t 22 -o geturls/ -f all.txt \
 -H "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:80.0) Gecko/20100101 Firefox/80.0" \
 -H "X-Forwarded-For: 127.0.0.1" \
 -H "X-Originating-IP: 127.0.0.1" \
