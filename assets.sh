@@ -49,7 +49,7 @@ curl -s "https://dns.bufferover.run/dns?q=.$DOMAIN" \
 | jq -r ".FDNS_A[]" \
 | cut -d',' -f2 \
 | sort -u \
-| tee -a $OUTPUT_DIR/bufferover.run-output.txt
+| tee -a $OUTPUT_DIR/bufferover.run-output.txt;
 
 # crt.sh
 curl "https://crt.sh/?q=%.$DOMAIN&output=json" \
@@ -59,14 +59,23 @@ curl "https://crt.sh/?q=%.$DOMAIN&output=json" \
 | sed "s/\\n/\n/g" \
 | grep -oE ".*\.$DOMAIN\.com$" \
 | sort -u \
-| tee -a $OUTPUT_DIR/crt.sh-output.txt
+| tee -a $OUTPUT_DIR/crt.sh-output.txt;
 
 # Go into "target" directory
 cd $OUTPUT_DIR/;
 
 # Sort all subdomains into one file
 echo -e "$GREEN$BOLD[+] Cleaning output and sorting into one file: all.txt$END$END";
-cat *.txt | sort -u | tee -a all.txt
+cat *.txt \
+| sort -u \
+| tee -a all.txt;
+
+# Create wordlist for altdns
+mkdir altdns/;
+sed "s/$DOMAIN//g" all.txt \
+| sed 's/\./\n/g' \
+| sed '/^$/d' \
+| sort -u > altdns/words.txt;
 
 # geturls
 geturls -t 50 -o geturls/ -f all.txt \
@@ -74,7 +83,7 @@ geturls -t 50 -o geturls/ -f all.txt \
 -H "X-Forwarded-For: 127.0.0.1" \
 -H "X-Originating-IP: 127.0.0.1" \
 -H "X-Remote-IP: 127.0.0.1" \
--H "X-Remote-Addr: 127.0.0.1"
+-H "X-Remote-Addr: 127.0.0.1";
 
 # Nmap scan
 #echo -e "$GREEN$BOLD[+] Checking for live host(s)$END$END";
