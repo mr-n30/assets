@@ -65,18 +65,37 @@ curl "https://crt.sh/?q=%.$DOMAIN&output=json" \
 cd $OUTPUT_DIR/;
 
 # Sort all subdomains into one file
-echo -e "$GREEN$BOLD[+] Cleaning output and sorting into one file: all.txt$END$END";
+echo -e "$GREEN$BOLD[+] Cleaning output and sorting into one file: all-base.txt$END$END";
 cat *.txt \
 | sort -u \
-| tee -a all.txt;
+| tee -a all-base.txt;
 
-# Create wordlist for altdns
-mkdir altdns/;
-echo $DOMAIN > altdns/subdomains.txt;
-sed "s/$DOMAIN//g" all.txt \
+# altdns
+echo -e "$GREEN$BOLD[+] Running: altdns$END$END";
+mkdir altdns/ \
+&& cd altdns/ \
+&& echo $DOMAIN > subdomains.txt \
+&& sed "s/$DOMAIN//g" ../all.txt \
 | sed 's/\./\n/g' \
 | sed '/^$/d' \
-| sort -u > altdns/words.txt;
+| sort -u > words.txt \
+&& altdns -i subdomains.txt -o output.txt -w words.txt -t 50 \
+&& mv output.txt subdomains.txt \
+&& altdns -i subdomains.txt -o output.txt -w words.txt -t 50 \
+&& cat subdomains.txt output.txt > all.txt;
+
+# massdns
+echo -e "$GREEN$BOLD[+] Running: massdns$END$END";
+massdns -o S -r /opt/massdns/lists/resolvers.txt -w ../massdns-output.txt all.txt \
+&& sed 's/\s.*//g' massdns-output.txt \
+&& sed 's/\.$//g' massdns-output.txt \
+&& cd $OUTPUT_DIR;
+
+# Sort subdomains one last time
+echo -e "$GREEN$BOLD[+] Cleaning output and sorting into one file: all.txt$END$END";
+cat all-base.txt massdns-output.txt \
+| sort -u \
+| tee -a all.txt;
 
 # geturls
 geturls -t 50 -o geturls/ -f all.txt \
