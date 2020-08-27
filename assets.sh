@@ -80,16 +80,16 @@ mkdir altdns/ \
 | sed '/^$/d' \
 | sort -u > words.txt \
 && altdns -i subdomains.txt -o output.txt -w words.txt -t 50 \
-&& mv output.txt subdomains.txt \
-&& altdns -i subdomains.txt -o output.txt -w words.txt -t 50 \
-&& cat subdomains.txt output.txt > all.txt;
+; mv output.txt subdomains.txt \
+; altdns -i subdomains.txt -o output.txt -w words.txt -t 50 \
+; cat subdomains.txt output.txt > all.txt;
 
 # massdns
 echo -e "$GREEN$BOLD[+] Running: massdns$END$END";
 massdns -o S -r /opt/massdns/lists/resolvers.txt -w ../massdns-output.txt all.txt \
 && sed 's/\s.*//g' ../massdns-output.txt \
 | sed 's/\.$//g' > ../massdns-output-clean.txt \
-&& cd $OUTPUT_DIR;
+&& cd $OUTPUT_DIR/;
 
 # Sort subdomains one last time
 echo -e "$GREEN$BOLD[+] Cleaning output and sorting into one file: all.txt$END$END";
