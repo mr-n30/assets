@@ -4,7 +4,7 @@
 apt update \
 && apt full-upgrade -y \
 && apt autoremove -y \
-&& apt install -y nmap masscan make firefox python3-pip golang chromium-browser python ssmtp \
+&& apt install -y nmap masscan make firefox python3-pip python-pip python golang chromium-browser ssmtp \
 && sleep 5
 
 ############
@@ -45,15 +45,15 @@ snap install amass \
 && sleep 1
 
 # Install altdns
-pip3 install py-altdns \
+pip install py-altdns \
 && sleep 1
 
 # Install ffuf
-go get github.com/ffuf/ffuf \
-&& mv ~/go/ ~/ffuf/ \
-&& mv ~/ffuf/ /opt/ \
-&& ln -sf /opt/ffuf/bin/ffuf /usr/bin/ffuf \
-&& sleep 1
+#go get github.com/ffuf/ffuf \
+#&& mv ~/go/ ~/ffuf/ \
+#&& mv ~/ffuf/ /opt/ \
+#&& ln -sf /opt/ffuf/bin/ffuf /usr/bin/ffuf \
+#&& sleep 1
 
 # Finished
 echo "[+] Tools installed into: /opt"
