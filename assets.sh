@@ -125,5 +125,5 @@ nmap -Pn -n -T4 -sS -v --min-rate=1000 -oX $OUTPUT_DIR/nmap/nmap-output.xml -iL 
 #aquatone -chrome-path /usr/bin/chromium-browser -out $OUTPUT_DIR/aquatone-nmap -nmap < $OUTPUT_DIR/nmap/nmap-output.xml
 
 ## Done
-echo -e "$INVERTED$GREEN$BOLD[+] Contents in: $OUTPUT_DIR/$END$END$END";
-echo -e "$INVERTED$BLINK$GREEN$BOLD[+] D O N E . . .$END$END$END$END";
+echo -e "$INVERTED$GREEN$BOLD[+] Data in: $OUTPUT_DIR/$END$END$END";
+echo -e "$INVERTED$BLINK$GREEN$BOLD[+] Done...$END$END$END$END";
