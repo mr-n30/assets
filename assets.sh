@@ -35,14 +35,17 @@ mkdir -p $OUTPUT_DIR/;
 #subfinder
 echo -e "$GREEN$BOLD[+] Running: subfinder$END$END";
 subfinder -d $DOMAIN -o $OUTPUT_DIR/subfinder-output.txt
+sleep 300
 
 # amass
 echo -e "$GREEN$BOLD[+] Running: amass$END$END";
 amass enum -d $DOMAIN -o $OUTPUT_DIR/amass-output.txt -brute -active;
+sleep 300
 
 # sublist3r
 echo -e "$GREEN$BOLD[+] Running: sublist3r$END$END";
 sublist3r -d $DOMAIN -o $OUTPUT_DIR/sublist3r-output.txt;
+sleep 300
 
 # bufferover.run
 curl -s "https://dns.bufferover.run/dns?q=.$DOMAIN" \
