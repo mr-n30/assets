@@ -72,24 +72,32 @@ cat *.txt \
 
 # altdns
 echo -e "$GREEN$BOLD[+] Running: altdns$END$END";
-mkdir altdns/ \
-&& cd altdns/ \
-&& echo $DOMAIN > subdomains.txt \
-&& sed "s/$DOMAIN//g" ../all-base.txt \
+mkdir altdns/;
+cd altdns/;
+echo $DOMAIN > subdomains.txt;
+
+# Create altnds wordlist
+sed "s/$DOMAIN//g" ../all-base.txt \
 | sed 's/\./\n/g' \
 | sed '/^$/d' \
-| sort -u > words.txt \
-&& altdns -i subdomains.txt -o output.txt -w words.txt -t 50 \
-; mv output.txt subdomains.txt \
-; altdns -i subdomains.txt -o output.txt -w words.txt -t 50 \
-; cat subdomains.txt output.txt > all.txt;
+| sort -u > words.txt;
+
+# run altdns
+altdns -i subdomains.txt -o output.txt -w words.txt -t 50;
+mv output.txt subdomains.txt;
+altdns -i subdomains.txt -o output.txt -w words.txt -t 50;
+cat subdomains.txt output.txt > all.txt;
 
 # massdns
 echo -e "$GREEN$BOLD[+] Running: massdns$END$END";
-massdns -o S -r /opt/massdns/lists/resolvers.txt -w ../massdns-output.txt all.txt \
-&& sed 's/\s.*//g' ../massdns-output.txt \
-| sed 's/\.$//g' > ../massdns-output-clean.txt \
-&& cd $OUTPUT_DIR/;
+massdns -o S -r /opt/massdns/lists/resolvers.txt -w $OUTPUT_DIR/massdns-output.txt all.txt;
+
+# Clean massdns output file
+sed 's/\s.*//g' $OUTPUT_DIR/massdns-output.txt \
+| sed 's/\.$//g' > $OUTPUT_DIR/massdns-output-clean.txt;
+
+# Go into "target" directory
+cd $OUTPUT_DIR/;
 
 # Sort subdomains one last time
 echo -e "$GREEN$BOLD[+] Cleaning output and sorting into one file: all.txt$END$END";
@@ -99,18 +107,17 @@ cat all-base.txt massdns-output-clean.txt \
 
 # geturls
 geturls -t 22 -o geturls/ -f all.txt \
--H "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:80.0) Gecko/20100101 Firefox/80.0" \
+-H "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:80.0) Gecko/20100101 Firefox/80.0 - (BUGCROWD - HACKERONE)" \
 -H "X-Forwarded-For: 127.0.0.1" \
 -H "X-Originating-IP: 127.0.0.1" \
 -H "X-Remote-IP: 127.0.0.1" \
 -H "X-Remote-Addr: 127.0.0.1";
 
-# Nmap scan
-#echo -e "$GREEN$BOLD[+] Checking for live host(s)$END$END";
-#cd $OUTPUT_DIR/;
-#mkdir nmap;
-#echo -e "$GREEN$BOLD[+] Running: nmap$END$END";
-#nmap -Pn -n -T4 -sS --min-rate=1000 -v -oA $OUTPUT_DIR/nmap/nmap-output -iL $OUTPUT_DIR/all.txt
+# Nmap
+echo -e "$GREEN$BOLD[+] Running: nmap$END$END";
+cd $OUTPUT_DIR/;
+mkdir nmap;
+nmap -Pn -n -T4 -sS -v --min-rate=1000 -oX $OUTPUT_DIR/nmap/nmap-output.xml -iL $OUTPUT_DIR/all.txt;
 
 # Screenshot
 #echo -e "$GREEN$BOLD[+] Running: aquatone$END$END";
