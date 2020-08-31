@@ -122,7 +122,7 @@ geturls -v -t 22 -f $OUTPUT_DIR/nmap/nmap-output.xml \
 -H "X-Remote-IP: 127.0.0.1" \
 -H "X-Remote-Addr: 127.0.0.1";
 
-# Screenshot
+## Screenshot
 #echo -e "$GREEN$BOLD[+] Running: aquatone$END$END";
 #mkdir $OUTPUT_DIR/aquatone-nmap
 #aquatone -chrome-path /usr/bin/chromium-browser -out $OUTPUT_DIR/aquatone-nmap -nmap < $OUTPUT_DIR/nmap/nmap-output.xml
