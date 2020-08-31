@@ -1,7 +1,7 @@
 # assets.sh
 Bash script used to automate asset discovery when doing recon. Output will be saved in: `~/targets/<domain>`.
 
-# Tools used:
+## Tools used:
 - [amass](https://github.com/OWASP/Amass)
 - [sublist3r](https://github.com/aboul3la/Sublist3r)
 - [subfinder](https://github.com/projectdiscovery/subfinder)
@@ -11,12 +11,12 @@ Bash script used to automate asset discovery when doing recon. Output will be sa
 - [ffuf](https://github.com/ffuf/ffuf)
 - [altdns](https://github.com/infosec-au/altdns)
 
-# Installation:
+## Installation:
 ```bash
 # chmod +x setup.sh && ./setup.sh
 ```
 
-# Usage:
+## Usage:
 ```bash
 # chmod +x assets.sh
 # ./assets.sh <domain>
