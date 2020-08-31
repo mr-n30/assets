@@ -114,13 +114,8 @@ cd $OUTPUT_DIR/;
 mkdir nmap;
 nmap -Pn -n -T4 -sS -v --open --min-rate=1000 -oX $OUTPUT_DIR/nmap/nmap-output.xml -iL $OUTPUT_DIR/all.txt;
 
-# Conver Nmap XML to JSON for parsing
-mkdir $OUTPUT_DIR/convert-xml-to-json/;
-python /opt/convert-xml-to-json/convert.py $OUTPUT_DIR/nmap/nmap-output.xml \
-| tee -a $OUTPUT_DIR/convert-xml-to-json/alive.txt
-
 # geturls
-geturls -t 22 -o $OUTPUT_DIR/geturls/ -f $OUTPUT_DIR/convert-xml-to-json/alive.txt \
+geturls -v -t 22 -f $OUTPUT_DIR/nmap/nmap-output.xml \
 -H "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:80.0) Gecko/20100101 Firefox/80.0 - (BUGCROWD - HACKERONE)" \
 -H "X-Forwarded-For: 127.0.0.1" \
 -H "X-Originating-IP: 127.0.0.1" \
