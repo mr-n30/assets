@@ -115,7 +115,7 @@ mkdir nmap;
 nmap -Pn -n -T4 -sS -v --open --min-rate=1000 -oX $OUTPUT_DIR/nmap/nmap-output.xml -iL $OUTPUT_DIR/all.txt;
 
 # geturls
-geturls -v -t 22 -f $OUTPUT_DIR/nmap/nmap-output.xml \
+geturls -v -t 22 --nmap $OUTPUT_DIR/nmap/nmap-output.xml \
 -H "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:80.0) Gecko/20100101 Firefox/80.0 - (BUGCROWD - HACKERONE)" \
 -H "X-Forwarded-For: 127.0.0.1" \
 -H "X-Originating-IP: 127.0.0.1" \
