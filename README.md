@@ -13,11 +13,11 @@ Bash script used to automate asset discovery when doing recon. Output will be sa
 
 ## Installation:
 ```bash
-# chmod +x setup.sh && ./setup.sh
+chmod +x setup.sh && ./setup.sh
 ```
 
 ## Usage:
 ```bash
-# chmod +x assets.sh
-# ./assets.sh <domain>
+chmod +x assets.sh
+./assets.sh <domain>
 ```
