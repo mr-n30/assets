@@ -2,8 +2,6 @@
 
 # Update the system
 sudo apt update \
-&& sudo apt full-upgrade -y \
-&& sudo apt autoremove -y \
 && sudo apt install -y nmap masscan make firefox python3-pip python-pip python chromium-browser ssmtp jq whois \
 && sleep 5;
 
