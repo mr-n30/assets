@@ -25,7 +25,7 @@ cd /opt;
 # Clone geturls
 git clone https://github.com/mr-n30/geturls.git \
 && cd geturls/ \
-&& pip install -r requirementst.txt \
+&& pip install -r requirements.txt \
 && sleep 1;
 
 # Go back to install directory
