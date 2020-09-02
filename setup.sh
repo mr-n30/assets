@@ -2,7 +2,7 @@
 
 # Update the system
 sudo apt update \
-&& sudo apt install -y nmap masscan make firefox python3-pip python-pip python chromium-browser ssmtp jq whois \
+&& sudo apt install -y nmap masscan make firefox python3-pip python-pip python chromium-browser ssmtp jq whois libpq-dev \
 && sleep 5;
 
 ############

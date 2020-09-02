@@ -32,14 +32,15 @@ fi
 echo -e "$GREEN$BOLD[+] Creating directory to save ouput: $OUTPUT_DIR$END$END";
 mkdir -p $OUTPUT_DIR/;
 
-#subfinder
-echo -e "$GREEN$BOLD[+] Running: subfinder$END$END";
-subfinder -d $DOMAIN -o $OUTPUT_DIR/subfinder-output.txt
-sleep 300
 
 # amass
 echo -e "$GREEN$BOLD[+] Running: amass$END$END";
 amass enum -d $DOMAIN -o $OUTPUT_DIR/amass-output.txt -brute -active;
+sleep 300
+
+#subfinder
+echo -e "$GREEN$BOLD[+] Running: subfinder$END$END";
+subfinder -d $DOMAIN -o $OUTPUT_DIR/subfinder-output.txt
 sleep 300
 
 # sublist3r
@@ -87,30 +88,34 @@ sed "s/$DOMAIN//g" ../all-base.txt \
 
 # run altdns
 altdns -i subdomains.txt -o output.txt -w words.txt -t 50;
-mv output.txt subdomains.txt;
-altdns -i subdomains.txt -o output.txt -w words.txt -t 50;
-cat subdomains.txt output.txt > all.txt;
+cat $OUTPUT_DIR/all-base.txt subdomains.txt output.txt \
+| sort -u > all.txt;
 
 # massdns
 echo -e "$GREEN$BOLD[+] Running: massdns$END$END";
-massdns -o S -r /opt/massdns/lists/resolvers.txt -w $OUTPUT_DIR/massdns-output.txt all.txt;
+massdns -o S -r /opt/massdns/lists/resolvers.txt -w $OUTPUT_DIR/massdns-output.txt $OUTPUT_DIR/altdns/all.txt;
+
+# Brute-Force
+/opt/massdns/scripts/subbrute.py /usr/share/wordlists/dns.txt $DOMAIN \
+| massdns -t A -o S -r /opt/massdns/lists/resolvers.txt -w $OUTPUT_DIR/massdns-output-brute.txt;
 
 # Clean massdns output file
 sed 's/\s.*//g' $OUTPUT_DIR/massdns-output.txt \
-| sed 's/\.$//g' > $OUTPUT_DIR/massdns-output-clean.txt;
+| sed 's/\.$//g' \
+| sort -u > $OUTPUT_DIR/massdns-output-clean.txt;
+
+sed 's/\s.*//g' $OUTPUT_DIR/massdns-output-brute.txt \
+| sed 's/\.$//g' \
+| sort -u > $OUTPUT_DIR/massdns-output-clean-brute.txt;
+
+cat $OUTPUT_DIR/massdns-output-clean.txt $OUTPUT_DIR/massdns-output-clean-brute.txt $OUTPUT_DIR/all-base.txt \
+| sort -u > $OUTPUT_DIR/all.txt;
 
 # Go into "target" directory
 cd $OUTPUT_DIR/;
 
-# Sort subdomains one last time
-echo -e "$GREEN$BOLD[+] Cleaning output and sorting into one file: all.txt$END$END";
-cat all-base.txt massdns-output-clean.txt \
-| sort -u \
-| tee -a all.txt;
-
 # Nmap
 echo -e "$GREEN$BOLD[+] Running: nmap$END$END";
-cd $OUTPUT_DIR/;
 mkdir nmap;
 nmap -Pn -n -T4 -sS -v --open --min-rate=1000 -oX $OUTPUT_DIR/nmap/nmap-output.xml -iL $OUTPUT_DIR/all.txt;
 
