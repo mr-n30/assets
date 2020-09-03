@@ -26,6 +26,7 @@ cd /opt;
 git clone https://github.com/mr-n30/geturls.git \
 && cd geturls/ \
 && pip install -r requirements.txt \
+&& ln -sf /opt/geturls/geturls.py /usr/bin/geturls \
 && sleep 1;
 
 # Go back to install directory
