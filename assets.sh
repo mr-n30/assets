@@ -13,6 +13,9 @@ DOMAIN=$1
 
 OUTPUT_DIR=~/targets/$DOMAIN
 
+###############
+# BEGIN SETUP #
+###############
 # argc
 if [[ "$#" -ne 1 ]];
 then
@@ -31,11 +34,17 @@ fi
 # Create directory to save all output
 echo -e "$GREEN$BOLD[+] Creating directory to save ouput: $OUTPUT_DIR$END$END";
 mkdir -p $OUTPUT_DIR/;
+#############
+# END SETUP #
+#############
 
 
+###############################
+# BEGIN SUBDOMAIN ENUMERATION #
+###############################
 # amass
 echo -e "$GREEN$BOLD[+] Running: amass$END$END";
-amass enum -d $DOMAIN -o $OUTPUT_DIR/amass-output.txt -brute -active;
+amass enum -d $DOMAIN -o $OUTPUT_DIR/amass-output.txt -brute -active -config ./config.ini
 sleep 300
 
 #subfinder
@@ -64,6 +73,9 @@ curl "https://crt.sh/?q=%.$DOMAIN&output=json" \
 | grep -oE ".*\.$DOMAIN\.com$" \
 | sort -u \
 | tee -a $OUTPUT_DIR/crt.sh-output.txt;
+#############################
+# END SUBDOMAIN ENUMERATION #
+#############################
 
 # Go into "target" directory
 cd $OUTPUT_DIR/;
@@ -74,50 +86,51 @@ cat *.txt \
 | sort -u \
 | tee -a all-base.txt;
 
-# altdns
-echo -e "$GREEN$BOLD[+] Running: altdns$END$END";
-mkdir altdns/;
-cd altdns/;
-echo $DOMAIN > subdomains.txt;
-
-# Create altnds wordlist
-sed "s/$DOMAIN//g" ../all-base.txt \
-| sed 's/\./\n/g' \
-| sed '/^$/d' \
-| sort -u > words.txt;
-
-# run altdns
-altdns -i subdomains.txt -o output.txt -w words.txt -t 50;
-cat $OUTPUT_DIR/all-base.txt subdomains.txt output.txt \
-| sort -u > all.txt;
-
+###############################
+# BEGIN SUBDOMAIN BRUTE-FORCE #
+###############################
 # massdns
 echo -e "$GREEN$BOLD[+] Running: massdns$END$END";
-massdns -o S -r /opt/massdns/lists/resolvers.txt -w $OUTPUT_DIR/massdns-output.txt $OUTPUT_DIR/altdns/all.txt;
-
-# Brute-Force
 /opt/massdns/scripts/subbrute.py /usr/share/wordlists/dns.txt $DOMAIN \
 | massdns -t A -o S -r /opt/massdns/lists/resolvers.txt -w $OUTPUT_DIR/massdns-output-brute.txt;
-
 # Clean massdns output file
-sed 's/\s.*//g' $OUTPUT_DIR/massdns-output.txt \
-| sed 's/\.$//g' \
-| sort -u > $OUTPUT_DIR/massdns-output-clean.txt;
-
 sed 's/\s.*//g' $OUTPUT_DIR/massdns-output-brute.txt \
 | sed 's/\.$//g' \
 | sort -u > $OUTPUT_DIR/massdns-output-clean-brute.txt;
-
-cat $OUTPUT_DIR/massdns-output-clean.txt $OUTPUT_DIR/massdns-output-clean-brute.txt $OUTPUT_DIR/all-base.txt \
+cat $OUTPUT_DIR/massdns-output-clean-brute.txt $OUTPUT_DIR/all-base.txt \
 | sort -u > $OUTPUT_DIR/all.txt;
+#############################
+# END SUBDOMAIN BRUTE-FORCE #
+#############################
 
 # Go into "target" directory
 cd $OUTPUT_DIR/;
 
+################
+# BEGIN NUCLEI #
+################
+# Check for cve's
+httprobe < $OUTPUT_DIR/all.txt | nuclei -l $OUTPUT_DIR/all.txt -t /opt/nuclei/nuclei-templates/cves/ -o $OUTPUT_DIR/nuclei-cve.txt
+# Check for subdomain takover
+nuclei -l $OUTPUT_DIR/all.txt -t /opt/nuclei/nuclei-templates/subdomain-takeover/ -o $OUTPUT_DIR/nuclei-subdomains-takeover.txt
+# Check for vulns
+httprobe < $OUTPUT_DIR/all.txt | nuclei -l $OUTPUT_DIR/all.txt -t /opt/nuclei/nuclei-templates/vulnerabilities/ -o $OUTPUT_DIR/nuclei-vulns.txt
+##############
+# END NUCLEI #
+##############
+
 # Nmap
 echo -e "$GREEN$BOLD[+] Running: nmap$END$END";
 mkdir nmap;
-nmap -Pn -n -T4 -sS -v --open --min-rate=1000 -oX $OUTPUT_DIR/nmap/nmap-output.xml -iL $OUTPUT_DIR/all.txt;
+## All ports scan
+nmap -Pn -v -p- -sS --open -oA $OUTPUT_DIR/nmap/all-ports-scan -iL $OUTPUT_DIR/all.txt;
+## Grep for data in files and store in variables
+HOSTS=$(grep -oR 'Host:.*()' $OUTPUT_DIR/nmap/all-ports-scan.gnmap | awk '/\s/ { print $2 }' | sort -u | tee -a $OUTPUT_DIR/nmap/hosts.txt)
+PORTS=$(grep -oR 'Ports:.*$' $OUTPUT_DIR/nmap/all-ports-scan.gnmap | grep -oE '[0-9]{1,5}/' | sed 's/\///g' | sort -u | tr '\n' ',' | sed 's/,$//g')
+## Default scan on open ports
+nmap -Pn -v -p $PORTS -sC -sV --open -oA $OUTPUT_DIR/nmap/default-script-scan -iL $OUTPUT_DIR/nmap/hosts.txt;
+## Vuln and default creds scan
+nmap -Pn -v -p $PORTS --script vuln,http-default-accounts --open -oA $OUTPUT_DIR/nmap/vuln-default_creds-script-scan -iL $OUTPUT_DIR/nmap/hosts.txt;
 
 # geturls
 geturls -v -t 22 -o $OUTPUT_DIR/.geturls/ --nmap $OUTPUT_DIR/nmap/nmap-output.xml \
@@ -128,9 +141,9 @@ geturls -v -t 22 -o $OUTPUT_DIR/.geturls/ --nmap $OUTPUT_DIR/nmap/nmap-output.xm
 -H "X-Remote-Addr: 127.0.0.1";
 
 ## Screenshot
-#echo -e "$GREEN$BOLD[+] Running: aquatone$END$END";
-#mkdir $OUTPUT_DIR/aquatone-nmap
-#aquatone -chrome-path /usr/bin/chromium-browser -out $OUTPUT_DIR/aquatone-nmap -nmap < $OUTPUT_DIR/nmap/nmap-output.xml
+echo -e "$GREEN$BOLD[+] Running: aquatone$END$END";
+mkdir $OUTPUT_DIR/aquatone-nmap
+aquatone -chrome-path /usr/bin/chromium-browser -out $OUTPUT_DIR/aquatone-nmap -nmap < $OUTPUT_DIR/nmap/nmap-output.xml
 
 ## Done
 echo -e "$INVERTED$GREEN$BOLD[+] Data in: $OUTPUT_DIR/$END$END$END";
