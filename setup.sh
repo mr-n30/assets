@@ -22,30 +22,11 @@ git clone https://github.com/aboul3la/Sublist3r.git \
 # Go back to install directory
 cd /opt;
 
-# Clone geturls
-git clone https://github.com/mr-n30/geturls.git \
-&& cd geturls/ \
-&& pip install -r requirements.txt \
-&& ln -sf /opt/geturls/geturls.py /usr/bin/geturls \
-&& sleep 1;
-
-# Go back to install directory
-cd /opt;
-
 # Install massdns
 git clone https://github.com/blechschmidt/massdns.git \
 && cd massdns \
 && make \
 && ln -sf /opt/massdns/bin/massdns /usr/bin/massdns \
-&& sleep 1;
-
-# Install amass
-snap install amass \
-&& sudo snap refresh \
-&& sleep 1;
-
-# Install altdns
-pip install py-altdns \
 && sleep 1;
 
 # Install ffuf
