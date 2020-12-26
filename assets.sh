@@ -83,12 +83,12 @@ echo -e "$GREEN$BOLD### [+] Running: nmap      ###$END$END"
 echo -e "$GREEN$BOLD##############################$END$END"
 mkdir $OUTPUT_DIR/nmap
 ## Top 1000 ports scan
-nmap -T4 -v --open -oA $OUTPUT_DIR/nmap/top-1000-ports-syn-scan -iL $OUTPUT_DIR/all.txt
+nmap -T4 -n -v --open -oA $OUTPUT_DIR/nmap/top-1000-ports-syn-scan -iL $OUTPUT_DIR/all.txt
 ## Grep for data in files and store in variables
 grep -oR 'Host:.*()' $OUTPUT_DIR/nmap/top-1000-ports-syn-scan.gnmap | awk '/\s/ { print $2 }' | sort -u | tee -a $OUTPUT_DIR/nmap/hosts.txt
 PORTS=$(grep -oR 'Ports:.*$' $OUTPUT_DIR/nmap/top-1000-ports-syn-scan.gnmap | grep -oE '[0-9]{1,5}/' | sed 's/\///g' | sort -u | tr '\n' ',' | sed 's/,$//g')
 ## Default script scan on open ports
-nmap -T4 -v -p $PORTS -sC -sV --open -oA $OUTPUT_DIR/nmap/default-script-scan-on-ports -iL $OUTPUT_DIR/nmap/hosts.txt
+nmap -T4 -n -v -p $PORTS -sC -sV --open -oA $OUTPUT_DIR/nmap/default-script-scan-on-ports -iL $OUTPUT_DIR/nmap/hosts.txt
 
 ## Screenshot
 echo -e "$GREEN$BOLD##############################$END$END"
