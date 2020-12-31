@@ -96,7 +96,7 @@ for DNS in $(cat $OUTPUT_DIR/all.txt); do
     dig +short $DNS | grep -oE '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | sort -u | tee -a $OUTPUT_DIR/ips.txt
 done
 
-masscan -v --rate=10000 -p0-65535 -oG $OUTPUT_DIR/masscan-output.gnmap -iL $OUTPUT_DIR/ips.txt
+masscan -v --rate=10000 -p0-65535 --open -oG $OUTPUT_DIR/masscan-output.gnmap -iL $OUTPUT_DIR/ips.txt
 
 # Start nmap scan
 echo -e "$GREEN$BOLD##############################$END$END"
