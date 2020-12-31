@@ -108,7 +108,7 @@ mkdir $OUTPUT_DIR/nmap
 PORTS=$(grep -oR 'Ports:.*$' $OUTPUT_DIR/masscan-output.gnmap | grep -oE '[0-9]{1,5}/' | sed 's/\///g' | sort -u | tr '\n' ',' | sed 's/,$//g')
 
 ## Default script scan on open ports
-nmap -v -T4 -sC -sV -p$PORTS --open -oA $OUTPUT_DIR/nmap/default-script-scan -iL $OUTPUT_DIR/nmap/hosts.txt
+nmap -v -T4 -sC -sV -p$PORTS --open -oA $OUTPUT_DIR/nmap/default-script-scan -iL $OUTPUT_DIR/all.txt
 
 ## Screenshot
 echo -e "$GREEN$BOLD##############################$END$END"
