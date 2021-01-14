@@ -27,7 +27,9 @@ then
 fi
 
 # Create directory to save all output
-mkdir -p $OUTPUT_DIR
+if [ ! -d "$OUTPUT_DIR"  ]; then
+    mkdir -p $OUTPUT_DIR
+fi
 
 # Begin subdomain enumeration
 # amass
@@ -105,10 +107,10 @@ echo -e "$GREEN$BOLD##############################$END$END"
 
 mkdir $OUTPUT_DIR/nmap
 
-PORTS=$(grep -oR 'Ports:.*$' $OUTPUT_DIR/masscan-output.gnmap | grep -oE '[0-9]{1,5}/' | sed 's/\///g' | sort -u | tr '\n' ',' | sed 's/,$//g')
+PORTS=$(grep -ioE '[0-9]{1,5}/[a-z]+' $OUTPUT_DIR/masscan-output.gnmap | awk -F'/' '{ print $1 }' | tr '\n' ',' | sed 's/,$//g')
 
 ## Default script scan on open ports
-nmap -v -T4 -sC -sV -p$PORTS --open -oA $OUTPUT_DIR/nmap/default-script-scan -iL $OUTPUT_DIR/all.txt
+nmap -v -T4 -sC -sV -n -p$PORTS --open -oA $OUTPUT_DIR/nmap/default-script-scan -iL $OUTPUT_DIR/all.txt
 
 ## Screenshot
 echo -e "$GREEN$BOLD##############################$END$END"
