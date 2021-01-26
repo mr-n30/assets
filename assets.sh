@@ -45,7 +45,7 @@ echo -e "$GREEN$BOLD##############################$END$END"
 echo -e "$GREEN$BOLD### [+] Running: subfinder ###$END$END"
 echo -e "$GREEN$BOLD##############################$END$END"
 
-subfinder -d $DOMAIN -o $OUTPUT_DIR/subfinder-output.txt
+subfinder -d $DOMAIN -o $OUTPUT_DIR/subfinder-output.txt -all
 sleep 300
 
 # sublist3r
@@ -79,15 +79,8 @@ echo -e "$GREEN$BOLD### [+] Running: nuclei    ###$END$END"
 echo -e "$GREEN$BOLD##############################$END$END"
 
 mkdir -p $OUTPUT_DIR/nuclei
-
-# Check for cve's
-httprobe < $OUTPUT_DIR/all.txt | nuclei -l $OUTPUT_DIR/all.txt -t /opt/nuclei/nuclei-templates/cves/ -o $OUTPUT_DIR/nuclei/nuclei-cve.txt
-
-# Check for subdomain takover
-nuclei -l $OUTPUT_DIR/all.txt -t /opt/nuclei/nuclei-templates/subdomain-takeover/ -o $OUTPUT_DIR/nuclei/nuclei-subdomains-takeover.txt
-
-# Check for vulns
-httprobe < $OUTPUT_DIR/all.txt | nuclei -l $OUTPUT_DIR/all.txt -t /opt/nuclei/nuclei-templates/vulnerabilities/ -o $OUTPUT_DIR/nuclei/nuclei-vulns.txt
+httprobe < $OUTPUT_DIR/all.txt | tee -a $OUTPUT_DIR/httprobe.txt
+nuclei -l $OUTPUT_DIR/httprobe.txt -t /opt/nuclei/nuclei-templates/cves/ -t /opt/nuclei/nuclei-templates/dns/ -t /opt/nuclei/nuclei-templates/vulnerabilities/ -t /opt/nuclei/nuclei-templates/takeovers/ -t /opt/nuclei/nuclei-templates/misconfiguration/ -t /opt/nuclei/nuclei-templates/exposures/ -t /opt/nuclei/nuclei-templates/exposed-panels/ -o $OUTPUT_DIR/nuclei/nuclei.txt
 
 # Start masscan
 echo -e "$GREEN$BOLD##############################$END$END"
