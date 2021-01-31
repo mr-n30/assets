@@ -1,6 +1,7 @@
 #!/bin/bash
 
-INSTALL_DIR=/opt/
+INSTALL_DIR=/opt/tools
+mkdir $INSTALL_DIR
 cd ~
 
 # Update the system
@@ -31,34 +32,54 @@ git clone https://github.com/aboul3la/Sublist3r.git && \
 	ln -sf $INSTALL_DIR/Sublist3r/sublist3r.py /usr/bin/sublist3r
 
 # Install massdns
-git clone https://github.com/blechschmidt/massdns.git && 
-	cd massdns/ && \
+git clone https://github.com/blechschmidt/massdns.git && \
+	mv massdns $INSTALL_DIR && \
+	cd $INSTALL_DIR/massdns/ && \
 	make && \
-	ln -sf /opt/massdns/bin/massdns /usr/bin/massdns
+	ln -sf $INSTALL_DIR/massdns/bin/massdns /usr/bin/massdns
+
+cd ~
 
 # Install ffuf
 go get -u github.com/ffuf/ffuf && \
-	mv ~/go ~/fuff && \
-	mv ~/ffuf /opt/ffuf && \
-	ln -sf /opt/ffuf/bin/ffuf /usr/bin/ffuf
+	mv ~/go ~/ffuf && \
+	mv ~/ffuf $INSTALL_DIR && \
+	ln -sf $INSTALL_DIR/ffuf/bin/ffuf /usr/bin/ffuf
 
 # Install dirsearch
-git clone https://github.com/maurosoria/dirsearch.git \
-	&& cd dirsearch
+git clone https://github.com/maurosoria/dirsearch.git && \
+	mv dirsearch $INSTALL_DIR && \
+	ln -sf $INSTALL_DIR/dirsearch/dirsearch.py /usr/bin/dirsearch
+
+# Instal gobuster
+go get -u github.com/OJ/gobuster && \
+	mv ~/go ~/gobuster && \
+	mv ~/gobuster $INSTALL_DIR && \
+	ln -sf $INSTALL_DIR/gobuster/bin/gobuster /usr/bin/gobuster
 
 # Install aquatone
 mkdir $INSTALL_DIR/aquatone && \
 	wget -P $INSTALL_DIR/aquatone/ https://github.com/michenriksen/aquatone/releases/download/v1.7.0/aquatone_linux_amd64_1.7.0.zip && \
 	unzip -d $INSTALL_DIR/aquatone/ $INSTALL_DIR/aquatone/aquatone_linux_amd64_1.7.0.zip && \
-	ln -sf /$INSTALL_DIR/aquatone/aquatone /usr/bin/aquatone
+	ln -sf $INSTALL_DIR/aquatone/aquatone /usr/bin/aquatone
+
+# Install httpx
+export GO111MODULE=on && \
+	go get -v github.com/projectdiscovery/httpx/cmd/httpx && \
+	mv ~/go ~/httpx && \
+	mv ~/httpx $INSTALL_DIR/ && \
+	ln -sf $INSTALL_DIR/httpx/bin/httpx /usr/bin/httpx
 
 # Install nuclei
-GO111MODULE=on && \
+export GO111MODULE=on && \
 	go get -v github.com/projectdiscovery/nuclei/v2/cmd/nuclei && \
 	mv ~/go ~/nuclei && \
 	mv ~/nuclei $INSTALL_DIR && \
-	ln -sf ~/$INSTALL_DIR/nuclei/bin/nuclei /usr/bin/nuclei
+	$INSTALL_DIR/nuclei/bin/nuclei -update-directory $INSTALL_DIR/nuclei/ -update-templates && \
+	ln -sf $INSTALL_DIR/nuclei/bin/nuclei /usr/bin/nuclei
+
+cd $INSTALL_DIR
 
 # Finished
-echo "[+] Tools installed into: /opt"
+echo "[+] Tools installed into: $INSTALL_DIR"
 echo "[+] Done."

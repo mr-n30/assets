@@ -79,8 +79,20 @@ echo -e "$GREEN$BOLD### [+] Running: nuclei    ###$END$END"
 echo -e "$GREEN$BOLD##############################$END$END"
 
 mkdir -p $OUTPUT_DIR/nuclei
-httprobe < $OUTPUT_DIR/all.txt | tee -a $OUTPUT_DIR/httprobe.txt
-nuclei -l $OUTPUT_DIR/httprobe.txt -t /opt/nuclei/nuclei-templates/cves/ -t /opt/nuclei/nuclei-templates/dns/ -t /opt/nuclei/nuclei-templates/vulnerabilities/ -t /opt/nuclei/nuclei-templates/takeovers/ -t /opt/nuclei/nuclei-templates/misconfiguration/ -t /opt/nuclei/nuclei-templates/exposures/ -t /opt/nuclei/nuclei-templates/exposed-panels/ -o $OUTPUT_DIR/nuclei/nuclei.txt
+httpx \
+	-H "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_6_8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.112 Safari/537.36 - (BUGCROWD: n30 / HACKERONE: mr_n30)" \
+	-no-fallback \ 
+	-silent < $OUTPUT_DIR/all.txt | tee -a $OUTPUT_DIR/httpx.txt
+nuclei \ 
+	-l $OUTPUT_DIR/httpx.txt  \
+	-t /opt/nuclei/nuclei-templates/cves/ \ 
+	-t /opt/nuclei/nuclei-templates/dns/  \
+	-t /opt/nuclei/nuclei-templates/vulnerabilities/ \ 
+	-t /opt/nuclei/nuclei-templates/takeovers/ \ 
+	-t /opt/nuclei/nuclei-templates/misconfiguration/ \ 
+	-t /opt/nuclei/nuclei-templates/exposures/ \ 
+	-t /opt/nuclei/nuclei-templates/exposed-panels/ \ 
+	-o $OUTPUT_DIR/nuclei/nuclei.txt
 
 # Start masscan
 echo -e "$GREEN$BOLD##############################$END$END"
