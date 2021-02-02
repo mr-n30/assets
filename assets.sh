@@ -11,6 +11,8 @@ END="\e[0m"
 # argv[1] is the domain for the script
 DOMAIN=$2
 OUTPUT_DIR=$1/$2
+TOOLS_DIR=/opt/tools
+SECLISTS=/opt/SecLists
 
 if [[ "$#" -ne 2 ]]
 then
@@ -58,16 +60,21 @@ sleep 300
 
 # Sort all subdomains into one file
 echo -e "$GREEN$BOLD##############################$END$END"
-echo -e "$GREEN$BOLD### [+] Sorting data...    ###$END$END"
+echo -e "$GREEN$BOLD### [+] A little somesome  ###$END$END"
+echo -e "$GREEN$BOLD###     while you wait...  ###$END$END"
 echo -e "$GREEN$BOLD##############################$END$END"
 cat $OUTPUT_DIR/*.txt | sort -u | tee -a $OUTPUT_DIR/all-base.txt
+httpx \
+	-H "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_6_8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.112 Safari/537.36 - (BUGCROWD: n30 / HACKERONE: mr_n30)" \
+	-no-fallback \ 
+	-silent < $OUTPUT_DIR/all-base.txt | tee -a $OUTPUT_DIR/tmp-httpx.txt
 
 # Begin subdomain brute-force with "massdns"
 echo -e "$GREEN$BOLD##############################$END$END"
 echo -e "$GREEN$BOLD### [+] Running: massdns   ###$END$END"
 echo -e "$GREEN$BOLD##############################$END$END"
 
-/opt/massdns/scripts/subbrute.py /usr/share/wordlists/dns.txt $DOMAIN | massdns -t A -o S -r /opt/massdns/lists/resolvers.txt -w $OUTPUT_DIR/massdns-output-brute.txt
+$TOOLS_DIR/massdns/scripts/subbrute.py $SECLISTS/Discovery/DNS/dns-Jhaddix.txt $DOMAIN | massdns -t A -o S -r $TOOLS_DIR/massdns/lists/resolvers.txt -w $OUTPUT_DIR/massdns-output-brute.txt
 
 # Clean massdns output file
 sed 's/\s.*//g' $OUTPUT_DIR/massdns-output-brute.txt | sed 's/\.$//g' | sort -u > $OUTPUT_DIR/massdns-output-clean-brute.txt
@@ -85,13 +92,14 @@ httpx \
 	-silent < $OUTPUT_DIR/all.txt | tee -a $OUTPUT_DIR/httpx.txt
 nuclei \ 
 	-l $OUTPUT_DIR/httpx.txt  \
-	-t /opt/nuclei/nuclei-templates/cves/ \ 
-	-t /opt/nuclei/nuclei-templates/dns/  \
-	-t /opt/nuclei/nuclei-templates/vulnerabilities/ \ 
-	-t /opt/nuclei/nuclei-templates/takeovers/ \ 
-	-t /opt/nuclei/nuclei-templates/misconfiguration/ \ 
-	-t /opt/nuclei/nuclei-templates/exposures/ \ 
-	-t /opt/nuclei/nuclei-templates/exposed-panels/ \ 
+	-t $TOOLS_DIR/nuclei/nuclei-templates/cves/ \ 
+	-t $TOOLS_DIR/nuclei/nuclei-templates/dns/  \
+	-t $TOOLS_DIR/nuclei/nuclei-templates/vulnerabilities/ \ 
+	-t $TOOLS_DIR/nuclei/nuclei-templates/takeovers/ \ 
+	-t $TOOLS_DIR/nuclei/nuclei-templates/misconfiguration/ \ 
+	-t $TOOLS_DIR/nuclei/nuclei-templates/exposures/ \ 
+	-t $TOOLS_DIR/nuclei/nuclei-templates/exposed-panels/ \ 
+	-t $TOOLS_DIR/nuclei/nuclei-templates/exposed-tokens/ \
 	-o $OUTPUT_DIR/nuclei/nuclei.txt
 
 # Start masscan
