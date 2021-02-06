@@ -23,9 +23,9 @@ Bash script used to automate doing recon.
 chmod +x install.sh; ./install.sh
 ```
 ## Before using 
-0. Make sure to set up your SSMTP config file
-1. Modify the variable SECLISTS in the script
-2. Modify the variable WORDLIST in the script
+* Make sure to set up your SSMTP config file
+* Modify the variable SECLISTS in the script
+* Modify the variable WORDLIST in the script
 
 ## Usage:
 ```bash
