@@ -12,7 +12,10 @@ MAGENTA="\e[95m"
 INVERTED="\e[7m"
 BACKGROUND="\e[40m" # Black
 
-# VARIABLES
+#############
+# CHANGE ME #
+# VARIABLES #
+#############
 SECLISTS=/opt/SecLists
 WORDLIST=/opt/p/wordlist.txt
 TOOLS_DIR=/opt/tools
