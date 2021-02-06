@@ -63,6 +63,21 @@ mkdir $INSTALL_DIR/aquatone && \
 	unzip -d $INSTALL_DIR/aquatone/ $INSTALL_DIR/aquatone/aquatone_linux_amd64_1.7.0.zip && \
 	ln -sf $INSTALL_DIR/aquatone/aquatone /usr/bin/aquatone
 
+# Install corscanner
+pip install cors
+
+# Install unfurl
+go get -u github.com/tomnomnom/unfurl && \
+	mv ~/go ~/unfurl && \
+	mv ~/unfurl $INSTALL_DIR && \
+	ln -sf $INSTALL_DIR/unfurl/bin/unfurl /usr/bin/unfurl
+
+# Install waybackurls
+go get -u github.com/tomnomnom/waybackurls && \
+	mv ~/go ~/waybackurls && \
+	mv ~/waybackurls $INSTALL_DIR && \
+	ln -sf $INSTALL_DIR/waybackurls/bin/waybackurls /usr/bin/waybackurls
+
 # Install httpx
 export GO111MODULE=on && \
 	go get -v github.com/projectdiscovery/httpx/cmd/httpx && \
@@ -77,6 +92,14 @@ export GO111MODULE=on && \
 	mv ~/nuclei $INSTALL_DIR && \
 	$INSTALL_DIR/nuclei/bin/nuclei -update-directory $INSTALL_DIR/nuclei/ -update-templates && \
 	ln -sf $INSTALL_DIR/nuclei/bin/nuclei /usr/bin/nuclei
+
+# Install linkfinder
+git clone https://github.com/GerbenJavado/LinkFinder.git && \
+	mv LinkFinder $INSTALL_DIR && \
+	cd $INSTALL_DIR/LinkFinder && \
+	python3 setup.py install && \
+	pip3 install -r requirements.txt && \
+	ln -sf $INSTALL_DIR/LinkFinder/linkfinder.py /usr/bin/linkfinder
 
 cd $INSTALL_DIR
 
