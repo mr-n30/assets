@@ -5,15 +5,15 @@ mkdir $INSTALL_DIR
 cd ~
 
 # Update the system
-sudo apt update && 
+sudo apt update &&
 	sudo add-apt-repository ppa:longsleep/golang-backports && \
 	sudo apt update && \
-	sudo apt install -y nmap masscan make firefox python3-pip python-pip python chromium-browser ssmtp jq whois libpq-dev golang-go && \
+	sudo apt install -y nmap masscan make firefox python3-pip python-pip python chromium-browser ssmtp jq whois libpq-dev golang-go brutespray medusa && \
 	sudo apt -y autoremove
 
 # Install amass
 export GO111MODULE=on && \
-	go get -v github.com/OWASP/Amass/v3/... && \
+    go get -v github.com/OWASP/Amass/v3/... && \
 	mv ~/go ~/amass && \
 	mv ~/amass $INSTALL_DIR && \
 	ln -sf $INSTALL_DIR/amass/bin/amass /usr/bin/amass

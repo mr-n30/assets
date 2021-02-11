@@ -132,6 +132,8 @@ echo -e "${UYELLOW}${BOLD}WORDLIST : ${WORDLIST}${END}${END}"
 echo -e "${UYELLOW}${BOLD}DIRECTORY: ${OUTPUT_DIR}${END}${END}"
 echo -e "${UYELLOW}${BOLD}EMAIL    : ${EMAIL}${END}${END}"
 
+# Begin subdomain enumeration
+
 # subfinder
 echo -e "${MAGENTA}${BOLD}######################################${END}${END}"
 echo -e "${MAGENTA}${BOLD}### ${YELLOW}[+] Running: subfinder${END}${END}${END}"
@@ -140,14 +142,13 @@ echo -e "${MAGENTA}${BOLD}######################################${END}${END}"
 subfinder -d $DOMAIN -o $OUTPUT_DIR/subfinder.txt -all -config $SUBFINDER_CONFIG
 sleep 300
 
-# Currently running very slow and waiting for a new version update
 # amass
-#echo -e "${MAGENTA}${BOLD}#########################################${END}${END}"
-#echo -e "${MAGENTA}${BOLD}### ${YELLOW}[+] Running: amass${END}${END}${END}"
-#echo -e "${MAGENTA}${BOLD}#########################################${END}${END}"
-#
-#amass enum -d $DOMAIN -o $OUTPUT_DIR/amass.txt -active -config $AMASS_CONFIG
-#sleep 300
+echo -e "${MAGENTA}${BOLD}#########################################${END}${END}"
+echo -e "${MAGENTA}${BOLD}### ${YELLOW}[+] Running: amass${END}${END}${END}"
+echo -e "${MAGENTA}${BOLD}#########################################${END}${END}"
+
+amass enum -d $DOMAIN -o $OUTPUT_DIR/amass.txt
+sleep 300
 
 # sublist3r
 echo -e "${MAGENTA}${BOLD}#############################################${END}${END}"
@@ -163,7 +164,6 @@ echo -e "${MAGENTA}${BOLD}### ${YELLOW}[+] Running: massdns${END}${END}${END}"
 echo -e "${MAGENTA}${BOLD}###########################################${END}${END}"
 
 $TOOLS_DIR/massdns/scripts/subbrute.py $SECLISTS/Discovery/DNS/dns-Jhaddix.txt $DOMAIN | massdns -t A -o S -r $TOOLS_DIR/massdns/lists/resolvers.txt -w $OUTPUT_DIR/massdns.out
-sed 's/\s.*//g' $OUTPUT_DIR/massdns.out | sed 's/\.$//g' | sort -u | tee -a $OUTPUT_DIR/massdns-domains.txt
 sleep 3
 
 # Sort all subdomains into one file
@@ -171,6 +171,7 @@ echo -e "${MAGENTA}${BOLD}#################################################${END
 echo -e "${MAGENTA}${BOLD}### ${YELLOW}[+] Sorting subdomains into one file${END}${END}${END}"
 echo -e "${MAGENTA}${BOLD}#################################################${END}${END}"
 
+sed 's/\s.*//g' $OUTPUT_DIR/massdns.out | sed 's/\.$//g' | sort -u | tee -a $OUTPUT_DIR/massdns-domains.txt
 cat $OUTPUT_DIR/*.txt | sort -u | tee -a $OUTPUT_DIR/all.txt
 sleep 3
 
@@ -193,9 +194,9 @@ echo -e "${MAGENTA}${BOLD}### ${YELLOW}[+] Running: aquatone${END}${END}${END}"
 echo -e "${MAGENTA}${BOLD}############################################${END}${END}"
 
 mkdir $OUTPUT_DIR/aquatone-basic
-aquatone -chrome-path /usr/bin/chromium-browser -out $OUTPUT_DIR/aquatone-basic < $OUTPUT_DIR/httpx.txt
+aquatone -chrome-path /usr/bin/chromium-browser -out $OUTPUT_DIR/aquatone-basic -ports xlarge < $OUTPUT_DIR/httpx.txt
 
-# Send email to user notifying them that a basic scan has completed
+# Send email to user notifying them that a 'Basic' scan has completed
 TYPE="Basic"
 send_email $TYPE $EMAIL $DOMAIN $OUTPUT_DIR
 
@@ -216,17 +217,18 @@ echo -e "${MAGENTA}${BOLD}### ${YELLOW}[+] Running: nuclei${END}${END}${END}"
 echo -e "${MAGENTA}${BOLD}##########################################${END}${END}"
 
 mkdir $OUTPUT_DIR/nuclei
-nuclei \
-	-l $OUTPUT_DIR/httpx.txt \
-	-o $OUTPUT_DIR/nuclei/nuclei.txt \
-	-t $TOOLS_DIR/nuclei/nuclei-templates/dns/ \
-	-t $TOOLS_DIR/nuclei/nuclei-templates/cves/ \
-	-t $TOOLS_DIR/nuclei/nuclei-templates/takeovers/ \
-	-t $TOOLS_DIR/nuclei/nuclei-templates/exposures/ \
-	-t $TOOLS_DIR/nuclei/nuclei-templates/exposed-tokens/ \
-	-t $TOOLS_DIR/nuclei/nuclei-templates/exposed-panels/ \
-	-t $TOOLS_DIR/nuclei/nuclei-templates/vulnerabilities/ \
-	-t $TOOLS_DIR/nuclei/nuclei-templates/misconfiguration/
+nuclei -l $OUTPUT_DIR/httpx.txt -o $OUTPUT_DIR/nuclei/nuclei.txt -t $TOOLS_DIR/nuclei/nuclei-templates/
+#nuclei \
+#	-l $OUTPUT_DIR/httpx.txt \
+#	-o $OUTPUT_DIR/nuclei/nuclei.txt \
+#	-t $TOOLS_DIR/nuclei/nuclei-templates/dns/ \
+#	-t $TOOLS_DIR/nuclei/nuclei-templates/cves/ \
+#	-t $TOOLS_DIR/nuclei/nuclei-templates/takeovers/ \
+#	-t $TOOLS_DIR/nuclei/nuclei-templates/exposures/ \
+#	-t $TOOLS_DIR/nuclei/nuclei-templates/exposed-tokens/ \
+#	-t $TOOLS_DIR/nuclei/nuclei-templates/exposed-panels/ \
+#	-t $TOOLS_DIR/nuclei/nuclei-templates/vulnerabilities/ \
+#	-t $TOOLS_DIR/nuclei/nuclei-templates/misconfiguration/
 
 # Start masscan
 echo -e "${MAGENTA}${BOLD}###########################################${END}${END}"
@@ -236,7 +238,7 @@ echo -e "${MAGENTA}${BOLD}###########################################${END}${END
 for DNS in $(cat $OUTPUT_DIR/all.txt); do
     dig +short $DNS | grep -oE '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | tee -a $OUTPUT_DIR/ip.txt
 done
-sort -u $OUTPUT_DIR/ip.txt | tee -a $OUTPUT_DIR/ips.txt && remove $OUTPUT_DIR/ip.txt
+sort -u $OUTPUT_DIR/ip.txt | tee -a $OUTPUT_DIR/ips.txt && rm $OUTPUT_DIR/ip.txt
 
 masscan -v --rate=10000 -p0-65535 --open -oG $OUTPUT_DIR/masscan-output.gnmap -iL $OUTPUT_DIR/ips.txt
 sleep 3
@@ -269,6 +271,7 @@ waybackurls < $OUTPUT_DIR/all.txt | tee -a $OUTPUT_DIR/wordlists/wb.txt
 unfurl --unique keys < $OUTPUT_DIR/wordlists/wb.txt     | tee -a $OUTPUT_DIR/wordlists/keys.txt
 unfurl --unique paths < $OUTPUT_DIR/wordlists/wb.txt    | tee -a $OUTPUT_DIR/wordlists/paths.txt
 unfurl --unique keypairs < $OUTPUT_DIR/wordlists/wb.txt | tee -a $OUTPUT_DIR/wordlists/keypairs.txt
+sleep 3
 
 # Start brute-forcing directories
 echo -e "${MAGENTA}${BOLD}########################################${END}${END}"
