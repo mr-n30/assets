@@ -8,7 +8,7 @@ cd ~
 sudo apt update &&
 	sudo add-apt-repository ppa:longsleep/golang-backports && \
 	sudo apt update && \
-	sudo apt install -y nmap masscan make firefox python3-pip python-pip python chromium-browser ssmtp jq whois libpq-dev golang-go brutespray medusa && \
+	sudo apt install -y nmap masscan make firefox python3-pip python-pip python chromium-browser ssmtp jq whois libpq-dev golang-go brutespray medusa unzip && \
 	sudo apt -y autoremove
 
 # Install amass
@@ -24,12 +24,6 @@ export GO111MODULE=on && \
 	mv ~/go ~/subfinder && \
 	mv ~/subfinder $INSTALL_DIR/ && \
 	ln -sf $INSTALL_DIR/subfinder/bin/subfinder /usr/bin/subfinder
-
-# Install sublist3r
-git clone https://github.com/aboul3la/Sublist3r.git && \
-	mv Sublist3r/ $INSTALL_DIR && \
-	pip install -r $INSTALL_DIR/Sublist3r/requirements.txt && \
-	ln -sf $INSTALL_DIR/Sublist3r/sublist3r.py /usr/bin/sublist3r
 
 # Install massdns
 git clone https://github.com/blechschmidt/massdns.git && \
@@ -51,12 +45,6 @@ git clone https://github.com/maurosoria/dirsearch.git && \
 	mv dirsearch $INSTALL_DIR && \
 	ln -sf $INSTALL_DIR/dirsearch/dirsearch.py /usr/bin/dirsearch
 
-# Instal gobuster
-go get -u github.com/OJ/gobuster && \
-	mv ~/go ~/gobuster && \
-	mv ~/gobuster $INSTALL_DIR && \
-	ln -sf $INSTALL_DIR/gobuster/bin/gobuster /usr/bin/gobuster
-
 # Install aquatone
 mkdir $INSTALL_DIR/aquatone && \
 	wget -P $INSTALL_DIR/aquatone/ https://github.com/michenriksen/aquatone/releases/download/v1.7.0/aquatone_linux_amd64_1.7.0.zip && \
@@ -64,7 +52,11 @@ mkdir $INSTALL_DIR/aquatone && \
 	ln -sf $INSTALL_DIR/aquatone/aquatone /usr/bin/aquatone
 
 # Install corscanner
-pip install cors
+git clone https://github.com/chenjj/CORScanner.git && \
+    mv CORScanner $INSTALL_DIR && \
+    cd $INSTALL_DIR/CORScanner/ && \
+    pip3 install -r requirements.txt && \
+    ln -sf $INSTALL_DIR/CORScanner/cors_scan.py /usr/bin/cors
 
 # Install unfurl
 go get -u github.com/tomnomnom/unfurl && \
@@ -100,6 +92,11 @@ git clone https://github.com/GerbenJavado/LinkFinder.git && \
 	python3 setup.py install && \
 	pip3 install -r requirements.txt && \
 	ln -sf $INSTALL_DIR/LinkFinder/linkfinder.py /usr/bin/linkfinder
+
+# Install smuggler
+git clone https://github.com/defparam/smuggler.git && \
+    mv smuggler $INSTALL_DIR && \
+    ln -sf $INSTALL_DIR/smuggler/smuggler.py /usr/bin/smuggler
 
 cd $INSTALL_DIR
 
