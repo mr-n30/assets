@@ -22,7 +22,7 @@ TOOLS_DIR=/opt/tools
 AMASS_CONFIG=/opt/p/config.ini
 NMAP_TOP_PORTS=/opt/p/nmap-top-1000-ports.txt
 SUBFINDER_CONFIG=/opt/p/config.yaml
-GITHUB_API_TOKEN=
+GIT=
 
 # Print banner
 echo -e "${BOLD}${RED}"
@@ -264,7 +264,7 @@ echo -e "${MAGENTA}${BOLD}##############################################${END}${
 sleep 3
 
 mkdir $OUTPUT_DIR/subdomainizer/
-subdomainizer -l $OUTPUT_DIR/gospider-js.txt -g -gt $GITHUB_API_TOKEN -k -d $DOMAIN -sop $OUTPUT_DIR/subdomainizer/secrets.txt -cop $OUTPUT_DIR/subdomainizer/clouds.txt -o $OUTPUT_DIR/subdomainizer/subs.txt
+subdomainizer -l $OUTPUT_DIR/gospider-js.txt -g -gt $GIT -k -d $DOMAIN -sop $OUTPUT_DIR/subdomainizer/secrets.txt -cop $OUTPUT_DIR/subdomainizer/clouds.txt -o $OUTPUT_DIR/subdomainizer/subs.txt
 sleep 300
 
 # Find endpoints in JS files
