@@ -22,7 +22,7 @@ TOOLS_DIR=/opt/tools
 AMASS_CONFIG=/opt/p/config.ini
 NMAP_TOP_PORTS=/opt/p/nmap-top-1000-ports.txt
 SUBFINDER_CONFIG=/opt/p/config.yaml
-GITHUB_API_TOKEN=37b9109d436c775cc56ba76d8a9811eac1cb1ba5
+GITHUB_API_TOKEN=
 
 # Print banner
 echo -e "${BOLD}${RED}"
@@ -134,15 +134,6 @@ echo -e "${MAGENTA}${BOLD}######################################${END}${END}"
 sleep 3
 
 subfinder -d $DOMAIN -o $OUTPUT_DIR/subfinder.txt -all -config $SUBFINDER_CONFIG
-sleep 300
-
-# amass
-echo -e "${MAGENTA}${BOLD}#########################################${END}${END}"
-echo -e "${MAGENTA}${BOLD}### ${YELLOW}[+] LOADING: amass${END}${END}${END}"
-echo -e "${MAGENTA}${BOLD}#########################################${END}${END}"
-sleep 3
-
-amass enum -d $DOMAIN -o $OUTPUT_DIR/amass.txt -active -config $AMASS_CONFIG
 sleep 3
 
 # massdns
@@ -230,14 +221,14 @@ mkdir $OUTPUT_DIR/nuclei
 nuclei \
 	-l $OUTPUT_DIR/httpx.txt \
 	-o $OUTPUT_DIR/nuclei/nuclei.txt \
-	-t $TOOLS_DIR/nuclei/nuclei-templates/dns/ \
-	-t $TOOLS_DIR/nuclei/nuclei-templates/cves/ \
-	-t $TOOLS_DIR/nuclei/nuclei-templates/takeovers/ \
-	-t $TOOLS_DIR/nuclei/nuclei-templates/exposures/ \
-	-t $TOOLS_DIR/nuclei/nuclei-templates/exposed-tokens/ \
-	-t $TOOLS_DIR/nuclei/nuclei-templates/exposed-panels/ \
-	-t $TOOLS_DIR/nuclei/nuclei-templates/vulnerabilities/ \
-	-t $TOOLS_DIR/nuclei/nuclei-templates/misconfiguration/
+	-t $TOOLS_DIR/nuclei-templates/dns/ \
+	-t $TOOLS_DIR/nuclei-templates/cves/ \
+	-t $TOOLS_DIR/nuclei-templates/takeovers/ \
+	-t $TOOLS_DIR/nuclei-templates/exposures/ \
+	-t $TOOLS_DIR/nuclei-templates/exposed-tokens/ \
+	-t $TOOLS_DIR/nuclei-templates/exposed-panels/ \
+	-t $TOOLS_DIR/nuclei-templates/vulnerabilities/ \
+	-t $TOOLS_DIR/nuclei-templates/misconfiguration/
 
 # Find endpoints in wayback machine
 echo -e "${MAGENTA}${BOLD}###############################################${END}${END}"
@@ -263,7 +254,7 @@ gospider -S $OUTPUT_DIR/httpx.txt -t 10 -o $OUTPUT_DIR/gospider \
 	-H "X-Remote-Addr: 127.0.0.1" \
 	-H "X-Forwarded-For: 127.0.0.1" \
 	-H "X-Originating-IP: 127.0.0.1"
-grep -R '^\[javascript\]' output/ | grep $DOMAIN | awk -F' ' '{ print $3 }' | sort -u | tee -a $OUTPUT_DIR/gospider-js.txt
+grep -R '^\[javascript\]' $OUTPUT_DIR/gospider/ | grep $DOMAIN | awk -F' ' '{ print $3 }' | sort -u | tee -a $OUTPUT_DIR/gospider-js.txt
 sleep 300
 
 # Find endpoints in JS files

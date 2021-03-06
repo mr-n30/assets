@@ -8,7 +8,7 @@ cd ~
 sudo apt update &&
 	sudo add-apt-repository ppa:longsleep/golang-backports && \
 	sudo apt update && \
-	sudo apt install -y nmap masscan make gcc firefox python3-pip python-pip python chromium-browser ssmtp jq whois libpq-dev golang-go brutespray medusa unzip openssl libssl-dev && \
+	sudo apt install -y nmap masscan make gcc firefox python3-pip python-pip python chromium-browser ssmtp jq whois libpq-dev golang-go brutespray medusa unzip openssl libssl-dev libpcap0.8 libpcap0.8-dev libpcap-dev && \
 	sudo apt -y autoremove
 
 # Install massdns
@@ -110,6 +110,9 @@ ln -sf $INSTALL_DIR/go/bin/gospider /usr/bin/gospider
 
 # Set nuclei templates directory
 nuclei -update-directory $INSTALL_DIR/ -update-templates
+
+# lowercase.py
+ln -sf $INSTALL_DIR/../assets/lowercase.py /usr/bin/lowercase
 
 # Finished
 echo "[+] Tools installed into: $INSTALL_DIR"
