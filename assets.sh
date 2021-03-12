@@ -137,12 +137,13 @@ mkdir $OUTPUT_DIR/naabu
 naabu -top-ports 100 -iL $OUTPUT_DIR/subfinder.txt -c 100 -verify -stats -scan-all-ips -timeout 100 -o $OUTPUT_DIR/naabu/naabu-100.txt
 sleep 3
 
+mkdir $OUTPUT_DIR/httpx
 httpx \
     -title \
 	-silent \
     -no-color \
 	-no-fallback \
-    -o $OUTPUT_DIR/httpx-100.out \
+    -o $OUTPUT_DIR/httpx/httpx-100.out \
 	-l $OUTPUT_DIR/naabu/naabu-100.txt \
 	-H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_6_8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.112 Safari/537.36 - (BUGCROWD: n30 / HACKERONE: mr_n30)' \
 	-H "X-Remote-IP: 127.0.0.1" \
@@ -150,7 +151,7 @@ httpx \
 	-H "X-Forwarded-For: 127.0.0.1" \
 	-H "X-Originating-IP: 127.0.0.1"
 
-awk -F' ' '{ print $1 }' $OUTPUT_DIR/httpx-100.out | sort -u | tee -a $OUTPUT_DIR/httpx-100.txt
+awk -F' ' '{ print $1 }' $OUTPUT_DIR/httpx/httpx-100.out | sort -u | tee -a $OUTPUT_DIR/httpx/httpx-100.txt
 
 # gospider
 echo -e "${MAGENTA}${BOLD}##############################################${END}${END}"
@@ -158,13 +159,13 @@ echo -e "${MAGENTA}${BOLD}### ${YELLOW}[+] LOADING: gospider${END}${END}${END}"
 echo -e "${MAGENTA}${BOLD}##############################################${END}${END}"
 sleep 3
 
-gospider -S $OUTPUT_DIR/httpx-100.txt -t 10 -o $OUTPUT_DIR/gospider \
+gospider -S $OUTPUT_DIR/httpx/httpx-100.txt -t 10 -o $OUTPUT_DIR/gospider \
 	-u 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_6_8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.112 Safari/537.36 - (BUGCROWD: n30 / HACKERONE: mr_n30)' \
 	-H "X-Remote-IP: 127.0.0.1" \
 	-H "X-Remote-Addr: 127.0.0.1" \
 	-H "X-Forwarded-For: 127.0.0.1" \
 	-H "X-Originating-IP: 127.0.0.1"
-grep -R '^\[javascript\]' $OUTPUT_DIR/gospider/ | grep $DOMAIN | awk -F' ' '{ print $3 }' | sort -u | tee -a $OUTPUT_DIR/gospider-js.txt
+grep -R '^\[javascript\]' $OUTPUT_DIR/gospider/ | grep $DOMAIN | awk -F' ' '{ print $3 }' | sort -u | tee -a $OUTPUT_DIR/gospider/gospider-js.txt
 sleep 300
 
 # create
@@ -198,7 +199,7 @@ sleep 3
 $TOOLS_DIR/massdns/scripts/subbrute.py $DNS_BRUTE $DOMAIN | massdns -t A -o S -r $RESOLVERS -w $OUTPUT_DIR/massdns-brute.out
 
 cat $OUTPUT_DIR/wordlists/wordlist.txt | massdns -t A -o S -r $RESOLVERS -w $OUTPUT_DIR/massdns-alts.out
-cat $OUTPUT_DIR/massdns-brute.out $OUTPUT_DIR/massdns-alts.out | sed 's/\s.*//g' | sed 's/\.$//g' | grep -v '127\.0\.0\.1' | sort -u | tee -a $OUTPUT_DIR/massdns.txt
+cat $OUTPUT_DIR/massdns-brute.out $OUTPUT_DIR/massdns-alts.out | grep -v '127\.0\.0\.1' | sed 's/\s.*//g' | sed 's/\.$//g' | sort -u | tee -a $OUTPUT_DIR/massdns.txt
 
 rm $OUTPUT_DIR/massdns-brute.out $OUTPUT_DIR/massdns-alts.out
 sleep 3
@@ -245,7 +246,7 @@ httpx \
 	-silent \
     -no-color \
 	-no-fallback \
-    -o $OUTPUT_DIR/httpx.out \
+    -o $OUTPUT_DIR/httpx/httpx.out \
 	-l $OUTPUT_DIR/naabu/naabu-1000.txt \
 	-H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_6_8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.112 Safari/537.36 - (BUGCROWD: n30 / HACKERONE: mr_n30)' \
 	-H "X-Remote-IP: 127.0.0.1" \
@@ -253,7 +254,7 @@ httpx \
 	-H "X-Forwarded-For: 127.0.0.1" \
 	-H "X-Originating-IP: 127.0.0.1"
 
-awk -F' ' '{ print $1 }' $OUTPUT_DIR/httpx.out | sort -u | tee -a $OUTPUT_DIR/httpx.txt
+awk -F' ' '{ print $1 }' $OUTPUT_DIR/httpx/httpx.out | sort -u | tee -a $OUTPUT_DIR/httpx/httpx.txt
 sleep 3
 
 # aquatone
@@ -262,7 +263,7 @@ echo -e "${MAGENTA}${BOLD}### ${YELLOW}[+] LOADING: aquatone${END}${END}${END}"
 echo -e "${MAGENTA}${BOLD}############################################${END}${END}"
 sleep 3
 
-aquatone -chrome-path /usr/bin/chromium-browser -out $OUTPUT_DIR/aquatone-basic < $OUTPUT_DIR/httpx.txt
+aquatone -chrome-path /usr/bin/chromium-browser -out $OUTPUT_DIR/aquatone-basic < $OUTPUT_DIR/httpx/httpx.txt
 sleep 3
 
 # email
@@ -280,7 +281,7 @@ sleep 3
 
 mkdir $OUTPUT_DIR/cors
 cors \
-	-i $OUTPUT_DIR/httpx.txt \
+	-i $OUTPUT_DIR/httpx/httpx.txt \
 	-o $OUTPUT_DIR/cors/cors.json \
 	--headers 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_6_8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.112 Safari/537.36 - (BUGCROWD: n30 / HACKERONE: mr_n30)'
 sleep 3
@@ -294,12 +295,11 @@ sleep 3
 mkdir $OUTPUT_DIR/nuclei
 nuclei \
     -c 100 \
-	-stats
+	-stats \
     -headless \
     -severity high \
     -severity critical \
-    -l $OUTPUT_DIR/httpx.
-    -l $OUTPUT_DIR/httpx.txt \
+    -l $OUTPUT_DIR/httpx/httpx.txt \
     -t $TOOLS_DIR/nuclei-templates/ \
     -o $OUTPUT_DIR/nuclei/nuclei.out \
     -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_6_8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.112 Safari/537.36 - (BUGCROWD: n30 / HACKERONE: mr_n30)'
@@ -319,8 +319,8 @@ subdomainizer \
 	-g \
 	-k \
 	-d $DOMAIN \
-	-l $OUTPUT_DIR/gospider-js.txt \
 	-o $OUTPUT_DIR/subdomainizer/subs.txt \
+	-l $OUTPUT_DIR/gospider/gospider-js.txt \
 	-cop $OUTPUT_DIR/subdomainizer/clouds.txt \
 	-sop $OUTPUT_DIR/subdomainizer/secrets.txt \
 sleep 300
@@ -331,7 +331,7 @@ echo -e "${MAGENTA}${BOLD}### ${YELLOW}[+] LOADING: linkfinder${END}${END}${END}
 echo -e "${MAGENTA}${BOLD}##############################################${END}${END}"
 sleep 3
 
-for URL in $(cat $OUTPUT_DIR/gospider-js.txt)
+for URL in $(cat $OUTPUT_DIR/gospider/gospider-js.txt)
 do
 	linkfinder -i $URL -d -o cli | tee -a $OUTPUT_DIR/wordlists/linkfinder.tmp
 done
@@ -339,17 +339,6 @@ done
 sort -u $OUTPUT_DIR/wordlists/linkfinder.tmp | tee -a $OUTPUT_DIR/linkfinder.txt
 rm $OUTPUT_DIR/wordlists/linkfinder.tmp
 sleep 300
-
-# smuggler
-#echo -e "${MAGENTA}${BOLD}###############################################${END}${END}"
-#echo -e "${MAGENTA}${BOLD}### ${YELLOW}[+] LOADING: smuggler${END}${END}${END}"
-#echo -e "${MAGENTA}${BOLD}###############################################${END}${END}"
-#
-#mkdir $OUTPUT_DIR/smuggler
-#sudo smuggler -q -l $OUTPUT_DIR/smuggler/smuggler.out < $OUTPUT_DIR/httpx.txt
-#grep -i 'Potential' $OUTPUT_DIR/smuggler/smuggler.out > $OUTPUT_DIR/smuggler/smuggler.txt
-#rm $OUTPUT_DIR/smuggler/smuggler.out
-#sleep 300
 
 # email START
 send_email
@@ -359,10 +348,6 @@ ls -lah $OUTPUT_DIR/ >> /tmp/email-template.txt
 echo -e "cors: $(jq .[].url $OUTPUT_DIR/cors/cors.json | sort -u | wc --lines)" >> /tmp/email-template.txt
 jq .[].url $OUTPUT_DIR/cors/cors.json | sort -u >> /tmp/email-template.txt
 echo -e '' >> /tmp/email-template.txt
-
-#echo -e "smuggler: $(wc --lines $OUTPUT_DIR/smuggler/smuggler.txt)" >> /tmp/email-template.txt
-#cat $OUTPUT_DIR/smuggler/smuggler.txt >> /tmp/email-template.txt
-#echo -e '' >> /tmp/email-template.txt
 
 echo -e "nuclei: $(wc --lines $OUTPUT_DIR/nuclei/nuclei.txt)" >> /tmp/email-template.txt
 cat $OUTPUT_DIR/nuclei/nuclei.txt >> /tmp/email-template.txt
@@ -406,7 +391,7 @@ naabu \
 	-scan-all-ips \
 	-iL $OUTPUT_DIR/all.txt \
 	-ports-file $OUTPUT_DIR/nmap/ports.txt \
-	-nmap-cli "-v -n --script default,vuln,vulners -sV -oA $OUTPUT_DIR/nmap/nmap"
+	-nmap-cli "nmap -v -n --script default,vuln,vulners -sV -oA $OUTPUT_DIR/nmap/nmap"
 sleep 3
 
 # aquatone

@@ -28,14 +28,19 @@ mkdir $INSTALL_DIR/aquatone && \
 git clone https://github.com/chenjj/CORScanner.git && \
     mv CORScanner $INSTALL_DIR && \
     cd $INSTALL_DIR/CORScanner/ && \
+    pip install -r requirements.txt && \
     pip3 install -r requirements.txt && \
+    python setup.py install && \
+    python3 setup.py install && \
     ln -sf $INSTALL_DIR/CORScanner/cors_scan.py /usr/bin/cors
 
 # Install linkfinder
 git clone https://github.com/GerbenJavado/LinkFinder.git && \
 	mv LinkFinder $INSTALL_DIR && \
 	cd $INSTALL_DIR/LinkFinder && \
+	python setup.py install && \
 	python3 setup.py install && \
+	pip install -r requirements.txt && \
 	pip3 install -r requirements.txt && \
 	ln -sf $INSTALL_DIR/LinkFinder/linkfinder.py /usr/bin/linkfinder
 
@@ -46,38 +51,38 @@ git clone https://github.com/defparam/smuggler.git && \
 
 # Install brutespray
 git clone https://github.com/x90skysn3k/brutespray.git && \
-    mv brutespray /opt/tools && \
-    cd /opt/tools/brutespray && \
+    mv brutespray $INSTALL_DIR && \
+    cd $INSTALL_DIR/brutespray && \
     pip install -r requirements.txt && \
     pip3 install -r requirements.txt && \
-    ln -sf /opt/tools/brutespray.py /usr/bin/brutespray
+    ln -sf $INSTALL_DIR/brutespray.py /usr/bin/brutespray
 
 # Install nmap
 git clone https://github.com/nmap/nmap.git && \
-    mv nmap /opt/tools/ && \
-    cd /opt/tools/nmap && \
+    mv nmap $INSTALL_DIR && \
+    cd $INSTALL_DIR/nmap && \
     ./configure && \
     make && \
     make install
 
 # Install masscan
 git clone https://github.com/robertdavidgraham/masscan.git && \
-    mv masscan /opt/tools && \
-    cd /opt/tools/masscan && \
+    mv masscan $INSTALL_DIR && \
+    cd $INSTALL_DIR/masscan && \
     make && \
     make install
 
 # Install subdomainizer
 git clone https://github.com/nsonaniya2010/SubDomainizer.git && \
-    mv SubDomainizer /opt/tools && \
-    cd /opt/tools/SubDomainizer && \
+    mv SubDomainizer $INSTALL_DIR && \
+    cd $INSTALL_DIR/SubDomainizer && \
     pip install -r requirements.txt && \
     pip3 install -r requirements.txt && \
-    ln -sf /opt/tools/SubDomainizer/SubDomainizer.py /usr/bin/subdomainizer
+    ln -sf $INSTALL_DIR/SubDomainizer/SubDomainizer.py /usr/bin/subdomainizer
 
 # Install fresh dns resolvers list
 git clone https://github.com/BonJarber/fresh-resolvers.git && \
-    mv fresh-resolvers /opt/tools
+    mv fresh-resolvers $INSTALL_DIR
 
 # Install altdns
 git clone https://github.com/infosec-au/altdns.git $INSTALL_DIR/altdns && \

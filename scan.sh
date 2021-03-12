@@ -2,6 +2,9 @@
 
 # variables
 EMAIL=$2
+OUTPUT_DIR=$1/scan
+DOMAIN=$(cat ~/domain.txt)
+
 RESOLVERS=/opt/tools/fresh-resolvers/resolvers.txt
 TOOLS_DIR=/opt/tools
 NMAP_TOP_PORTS=/opt/p/nmap-top-1000-ports.txt
@@ -12,12 +15,11 @@ cd $TOOLS_DIR/fresh-resolvers/ && git pull
 sleep 3
 
 # Create install directory
-mkdir -p $OUTPUT_DIR/scan
-OUTPUT_DIR=$1/scan
-sleep 3
-
-# Set the domain
-DOMAIN=$(cat ~/domain.txt)
+if [ ! -d "$OUTPUT_DIR"  ]
+then
+    mkdir -p $OUTPUT_DIR
+    sleep 3
+fi
 
 # subfinder
 subfinder -d $DOMAIN -o $OUTPUT_DIR/subfinder-new.txt -all -config $SUBFINDER_CONFIG
@@ -64,11 +66,11 @@ sleep 3
 nuclei \
     -c 100 \
     -headless \
-    -severity medium \
     -severity high \
     -severity critical \
     -l $OUTPUT_DIR/httpx.txt \
     -o $OUTPUT_DIR/nuclei-new.out \
+    -t $TOOLS_DIR/nuclei-templates \
     -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_6_8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.112 Safari/537.36 - (BUGCROWD: n30 / HACKERONE: mr_n30)'
 grep -oE '\s\[.*' $OUTPUT_DIR/nuclei-new.out | sed 's/^\s//g' | tee -a $OUTPUT_DIR/nuclei-new.txt
 rm $OUTPUT_DIR/nuclei-new.out
