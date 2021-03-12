@@ -294,11 +294,13 @@ sleep 3
 mkdir $OUTPUT_DIR/nuclei
 nuclei \
     -c 100 \
-	-stat
+	-stats
     -headless \
     -severity high \
     -severity critical \
+    -l $OUTPUT_DIR/httpx.
     -l $OUTPUT_DIR/httpx.txt \
+    -t $TOOLS_DIR/nuclei-templates/ \
     -o $OUTPUT_DIR/nuclei/nuclei.out \
     -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_6_8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.112 Safari/537.36 - (BUGCROWD: n30 / HACKERONE: mr_n30)'
 

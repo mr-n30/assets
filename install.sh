@@ -73,7 +73,7 @@ git clone https://github.com/nsonaniya2010/SubDomainizer.git && \
     cd /opt/tools/SubDomainizer && \
     pip install -r requirements.txt && \
     pip3 install -r requirements.txt && \
-    ln -sf /opt/tools/SubDomainizer /usr/bin/subdomainizer
+    ln -sf /opt/tools/SubDomainizer/SubDomainizer.py /usr/bin/subdomainizer
 
 # Install fresh dns resolvers list
 git clone https://github.com/BonJarber/fresh-resolvers.git && \

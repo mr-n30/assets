@@ -29,4 +29,5 @@ ln -sf $INSTALL_DIR/go/bin/gospider /usr/bin/gospider
 ln -sf $INSTALL_DIR/go/bin/naabu /usr/bin/naabu
 
 # Set nuclei templates directory
+mkdir $INSTALL_DIR/nuclei-templates
 nuclei -update-directory $INSTALL_DIR/ -update-templates
