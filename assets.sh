@@ -19,7 +19,6 @@ WORDLIST=/opt/p/wordlist.txt
 DNS_BRUTE=/opt/p/dns.txt
 RESOLVERS=/opt/tools/fresh-resolvers/resolvers.txt
 TOOLS_DIR=/opt/tools
-AMASS_CONFIG=/opt/p/config.ini
 NMAP_TOP_PORTS=/opt/p/nmap-top-1000-ports.txt
 SUBFINDER_CONFIG=/opt/p/config.yaml
 GIT=
@@ -56,17 +55,9 @@ send_email() {
     echo -e "${MAGENTA}${BOLD}################################################${END}${END}"
     sleep 3
 
-	echo -e "${YELLOW}${BOLD}[+] Creating email template..."
-	echo -e "Subject: ${1} scan finished for: ${3}" > /tmp/email.html
-    echo -e "Content-Type: text/html\r\n" >> /tmp/email.html
-
-	echo -e "<html><head><p>Directory: ${4}/</p></head><body>" >> /tmp/email.html
-
-	echo -e "${YELLOW}${BOLD}[+] Sending email to: ${2}${END}${END}"
-	ssmtp $2 < /tmp/email.html
-
-	echo -e "${YELLOW}${BOLD}[+] Email sent...${END}${END}"
-	rm /tmp/email.html
+    echo -e "To: ${EMAIL}" >> /tmp/email-template.txt && \
+    echo -e "From: $USER@$(cat /etc/hostname)" >> /tmp/email-template.txt && \
+    echo -e "Content-Type: text/plain;" >> /tmp/email-template.txt
 }
 
 # Parse command line arguments
@@ -122,9 +113,9 @@ then
 fi
 
 echo -e "${UYELLOW}${BOLD}DOMAIN   : ${DOMAIN}${END}${END}"
+echo -e "${UYELLOW}${BOLD}RCPT     : ${EMAIL}${END}${END}"
 echo -e "${UYELLOW}${BOLD}WORDLIST : ${WORDLIST}${END}${END}"
 echo -e "${UYELLOW}${BOLD}DIRECTORY: ${OUTPUT_DIR}${END}${END}"
-echo -e "${UYELLOW}${BOLD}EMAIL    : ${EMAIL}${END}${END}"
 sleep 3
 
 # subfinder
@@ -136,14 +127,80 @@ sleep 3
 subfinder -d $DOMAIN -o $OUTPUT_DIR/subfinder.txt -all -config $SUBFINDER_CONFIG
 sleep 3
 
+# naabu
+echo -e "${MAGENTA}${BOLD}#########################################${END}${END}"
+echo -e "${MAGENTA}${BOLD}### ${YELLOW}[+] LOADING: naabu+httpx${END}${END}${END}"
+echo -e "${MAGENTA}${BOLD}#########################################${END}${END}"
+sleep 3
+
+mkdir $OUTPUT_DIR/naabu
+naabu -top-ports 100 -iL $OUTPUT_DIR/subfinder.txt -c 100 -verify -stats -scan-all-ips -timeout 100 -o $OUTPUT_DIR/naabu/naabu-100.txt
+sleep 3
+
+httpx \
+    -title \
+	-silent \
+    -no-color \
+	-no-fallback \
+    -o $OUTPUT_DIR/httpx-100.out \
+	-l $OUTPUT_DIR/naabu/naabu-100.txt \
+	-H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_6_8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.112 Safari/537.36 - (BUGCROWD: n30 / HACKERONE: mr_n30)' \
+	-H "X-Remote-IP: 127.0.0.1" \
+	-H "X-Remote-Addr: 127.0.0.1" \
+	-H "X-Forwarded-For: 127.0.0.1" \
+	-H "X-Originating-IP: 127.0.0.1"
+
+awk -F' ' '{ print $1 }' $OUTPUT_DIR/httpx-100.out | sort -u | tee -a $OUTPUT_DIR/httpx-100.txt
+
+# gospider
+echo -e "${MAGENTA}${BOLD}##############################################${END}${END}"
+echo -e "${MAGENTA}${BOLD}### ${YELLOW}[+] LOADING: gospider${END}${END}${END}"
+echo -e "${MAGENTA}${BOLD}##############################################${END}${END}"
+sleep 3
+
+gospider -S $OUTPUT_DIR/httpx-100.txt -t 10 -o $OUTPUT_DIR/gospider \
+	-u 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_6_8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.112 Safari/537.36 - (BUGCROWD: n30 / HACKERONE: mr_n30)' \
+	-H "X-Remote-IP: 127.0.0.1" \
+	-H "X-Remote-Addr: 127.0.0.1" \
+	-H "X-Forwarded-For: 127.0.0.1" \
+	-H "X-Originating-IP: 127.0.0.1"
+grep -R '^\[javascript\]' $OUTPUT_DIR/gospider/ | grep $DOMAIN | awk -F' ' '{ print $3 }' | sort -u | tee -a $OUTPUT_DIR/gospider-js.txt
+sleep 300
+
+# create
+echo -e "${MAGENTA}${BOLD}###############################################${END}${END}"
+echo -e "${MAGENTA}${BOLD}### ${YELLOW}[+] Creating custom wordlists${END}${END}${END}"
+echo -e "${MAGENTA}${BOLD}###############################################${END}${END}"
+sleep 3
+
+mkdir $OUTPUT_DIR/wordlists
+
+waybackurls < $OUTPUT_DIR/subfinder.txt | tee -a $OUTPUT_DIR/wordlists/wb.txt
+unfurl --unique keys < $OUTPUT_DIR/wordlists/wb.txt     | tee -a $OUTPUT_DIR/wordlists/keys.txt
+unfurl --unique paths < $OUTPUT_DIR/wordlists/wb.txt    | tee -a $OUTPUT_DIR/wordlists/paths.txt
+unfurl --unique keypairs < $OUTPUT_DIR/wordlists/wb.txt | tee -a $OUTPUT_DIR/wordlists/keypairs.txt
+
+cat $OUTPUT_DIR/gospider/* | awk -F' ' '{ print $5 }' | tr '[:punct:]' '\n' | sort -u >  $OUTPUT_DIR/wordlists/w.txt
+cat $OUTPUT_DIR/wordlists/paths.txt | tr '[:punct:]' '\n' | sort -u >>  $OUTPUT_DIR/wordlists/w.txt
+
+sort -u $OUTPUT_DIR/wordlists/w.txt > $OUTPUT_DIR/wordlists/wordlist.txt
+
+altdns -i $OUTPUT_DIR/subfinder.txt -o $OUTPUT_DIR/altdns.txt -w $OUTPUT_DIR/wordlists/wordlists.txt
+
+rm $OUTPUT_DIR/wordlists/w.txt
+
 # massdns
 echo -e "${MAGENTA}${BOLD}###########################################${END}${END}"
 echo -e "${MAGENTA}${BOLD}### ${YELLOW}[+] LOADING: massdns${END}${END}${END}"
 echo -e "${MAGENTA}${BOLD}###########################################${END}${END}"
 sleep 3
 
-$TOOLS_DIR/massdns/scripts/subbrute.py $DNS_BRUTE $DOMAIN | massdns -t A -o S -r $RESOLVERS -w $OUTPUT_DIR/massdns.out
-sed 's/\s.*//g' $OUTPUT_DIR/massdns.out | sed 's/\.$//g' | sort -u | tee -a $OUTPUT_DIR/massdns-domains.txt
+$TOOLS_DIR/massdns/scripts/subbrute.py $DNS_BRUTE $DOMAIN | massdns -t A -o S -r $RESOLVERS -w $OUTPUT_DIR/massdns-brute.out
+
+cat $OUTPUT_DIR/wordlists/wordlist.txt | massdns -t A -o S -r $RESOLVERS -w $OUTPUT_DIR/massdns-alts.out
+cat $OUTPUT_DIR/massdns-brute.out $OUTPUT_DIR/massdns-alts.out | sed 's/\s.*//g' | sed 's/\.$//g' | grep -v '127\.0\.0\.1' | sort -u | tee -a $OUTPUT_DIR/massdns.txt
+
+rm $OUTPUT_DIR/massdns-brute.out $OUTPUT_DIR/massdns-alts.out
 sleep 3
 
 # Sort all subdomains into one file
@@ -152,7 +209,7 @@ echo -e "${MAGENTA}${BOLD}### ${YELLOW}[+] Sorting subdomains into one file${END
 echo -e "${MAGENTA}${BOLD}#################################################${END}${END}"
 sleep 3
 
-cat $OUTPUT_DIR/*.txt | sort -u | tee -a $OUTPUT_DIR/domains.txt
+cat $OUTPUT_DIR/subfinder.txt $OUTPUT_DIR/massdns.txt | lowercase | sort -u | tee -a $OUTPUT_DIR/domains.txt
 sleep 3
 
 # dnsx
@@ -161,13 +218,23 @@ echo -e "${MAGENTA}${BOLD}### ${YELLOW}[+] LOADING: dnsx${END}${END}${END}"
 echo -e "${MAGENTA}${BOLD}#################################################${END}${END}"
 sleep 3
 
-cat $OUTPUT_DIR/domains.txt | sort -u | dnsx -a -resp -verbose -o $OUTPUT_DIR/dnsx.out -r $RESOLVERS
+cat $OUTPUT_DIR/domains.txt | dnsx -a -resp -verbose -o $OUTPUT_DIR/dnsx.out -r $RESOLVERS
 awk -F' ' ' { print $2 } ' $OUTPUT_DIR/dnsx.out | sed -E 's/(\[|\])//g' | sort -u | tee -a $OUTPUT_DIR/ips.txt
 awk -F' ' ' { print $1 } ' $OUTPUT_DIR/dnsx.out | sort -u | tee -a $OUTPUT_DIR/all.txt
 rm $OUTPUT_DIR/domains.txt
 sleep 3
 
-# Start httpx
+# naabu
+echo -e "${MAGENTA}${BOLD}#########################################${END}${END}"
+echo -e "${MAGENTA}${BOLD}### ${YELLOW}[+] LOADING: naabu${END}${END}${END}"
+echo -e "${MAGENTA}${BOLD}#########################################${END}${END}"
+sleep 3
+
+mkdir $OUTPUT_DIR/naabu
+naabu -top-ports 1000 -iL $OUTPUT_DIR/all.txt -c 100 -verify -stats -scan-all-ips -timeout 100 -o $OUTPUT_DIR/naabu/naabu-1000.txt
+sleep 3
+
+# httpx
 echo -e "${MAGENTA}${BOLD}#########################################${END}${END}"
 echo -e "${MAGENTA}${BOLD}### ${YELLOW}[+] LOADING: httpx${END}${END}${END}"
 echo -e "${MAGENTA}${BOLD}#########################################${END}${END}"
@@ -175,10 +242,11 @@ sleep 3
 
 httpx \
     -title \
+	-silent \
     -no-color \
-    -ports 80,443 \
+	-no-fallback \
     -o $OUTPUT_DIR/httpx.out \
-	-l $OUTPUT_DIR/all.txt -no-fallback -silent \
+	-l $OUTPUT_DIR/naabu/naabu-1000.txt \
 	-H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_6_8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.112 Safari/537.36 - (BUGCROWD: n30 / HACKERONE: mr_n30)' \
 	-H "X-Remote-IP: 127.0.0.1" \
 	-H "X-Remote-Addr: 127.0.0.1" \
@@ -186,20 +254,25 @@ httpx \
 	-H "X-Originating-IP: 127.0.0.1"
 
 awk -F' ' '{ print $1 }' $OUTPUT_DIR/httpx.out | sort -u | tee -a $OUTPUT_DIR/httpx.txt
+sleep 3
 
-# Begin screenshots on httpx.txt
+# aquatone
 echo -e "${MAGENTA}${BOLD}############################################${END}${END}"
 echo -e "${MAGENTA}${BOLD}### ${YELLOW}[+] LOADING: aquatone${END}${END}${END}"
 echo -e "${MAGENTA}${BOLD}############################################${END}${END}"
 sleep 3
 
 aquatone -chrome-path /usr/bin/chromium-browser -out $OUTPUT_DIR/aquatone-basic < $OUTPUT_DIR/httpx.txt
+sleep 3
 
-# Email
-TYPE="Screenshot"
-send_email $TYPE $EMAIL $DOMAIN $OUTPUT_DIR
+# email
+send_email
+echo -e "Subject: Screenshots ready for ${DOMAIN} on $(cat /etc/hostname)" >> /tmp/email-template.txt
+ls -lah $OUTPUT_DIR/aquatone-basic >> /tmp/email-template.txt
+sendmail $EMAIL < /tmp/email-template.txt
+rm /tmp/email-template.txt
 
-# Start corscanner
+# corscanner
 echo -e "${MAGENTA}${BOLD}##############################################${END}${END}"
 echo -e "${MAGENTA}${BOLD}### ${YELLOW}[+] LOADING: corscanner${END}${END}${END}"
 echo -e "${MAGENTA}${BOLD}##############################################${END}${END}"
@@ -210,8 +283,9 @@ cors \
 	-i $OUTPUT_DIR/httpx.txt \
 	-o $OUTPUT_DIR/cors/cors.json \
 	--headers 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_6_8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.112 Safari/537.36 - (BUGCROWD: n30 / HACKERONE: mr_n30)'
+sleep 3
 
-# Start nuclei scan
+# nuclei
 echo -e "${MAGENTA}${BOLD}##########################################${END}${END}"
 echo -e "${MAGENTA}${BOLD}### ${YELLOW}[+] LOADING: nuclei${END}${END}${END}"
 echo -e "${MAGENTA}${BOLD}##########################################${END}${END}"
@@ -219,55 +293,37 @@ sleep 3
 
 mkdir $OUTPUT_DIR/nuclei
 nuclei \
-	-l $OUTPUT_DIR/httpx.txt \
-	-o $OUTPUT_DIR/nuclei/nuclei.txt \
-	-t $TOOLS_DIR/nuclei-templates/dns/ \
-	-t $TOOLS_DIR/nuclei-templates/cves/ \
-	-t $TOOLS_DIR/nuclei-templates/takeovers/ \
-	-t $TOOLS_DIR/nuclei-templates/exposures/ \
-	-t $TOOLS_DIR/nuclei-templates/exposed-tokens/ \
-	-t $TOOLS_DIR/nuclei-templates/exposed-panels/ \
-	-t $TOOLS_DIR/nuclei-templates/vulnerabilities/ \
-	-t $TOOLS_DIR/nuclei-templates/misconfiguration/
+    -c 100 \
+	-stat
+    -headless \
+    -severity high \
+    -severity critical \
+    -l $OUTPUT_DIR/httpx.txt \
+    -o $OUTPUT_DIR/nuclei/nuclei.out \
+    -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_6_8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.112 Safari/537.36 - (BUGCROWD: n30 / HACKERONE: mr_n30)'
 
-# Find endpoints in wayback machine
-echo -e "${MAGENTA}${BOLD}###############################################${END}${END}"
-echo -e "${MAGENTA}${BOLD}### ${YELLOW}[+] LOADING: waybackurls${END}${END}${END}"
-echo -e "${MAGENTA}${BOLD}###############################################${END}${END}"
+grep -oE '\s\[.*' $OUTPUT_DIR/nuclei/nuclei.out | sed 's/^\s//g' | tee -a $OUTPUT_DIR/nuclei/nuclei.txt
+rm $OUTPUT_DIR/nuclei/nuclei.out
 sleep 3
 
-mkdir $OUTPUT_DIR/wordlists
-waybackurls < $OUTPUT_DIR/all.txt | tee -a $OUTPUT_DIR/wordlists/wb.txt
-unfurl --unique keys < $OUTPUT_DIR/wordlists/wb.txt     | tee -a $OUTPUT_DIR/wordlists/keys.txt
-unfurl --unique paths < $OUTPUT_DIR/wordlists/wb.txt    | tee -a $OUTPUT_DIR/wordlists/paths.txt
-unfurl --unique keypairs < $OUTPUT_DIR/wordlists/wb.txt | tee -a $OUTPUT_DIR/wordlists/keypairs.txt
-
-# gospider
-echo -e "${MAGENTA}${BOLD}##############################################${END}${END}"
-echo -e "${MAGENTA}${BOLD}### ${YELLOW}[+] LOADING: gospider${END}${END}${END}"
-echo -e "${MAGENTA}${BOLD}##############################################${END}${END}"
-sleep 3
-
-gospider -S $OUTPUT_DIR/httpx.txt -t 10 -o $OUTPUT_DIR/gospider \
-	-u 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_6_8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.112 Safari/537.36 - (BUGCROWD: n30 / HACKERONE: mr_n30)' \
-	-H "X-Remote-IP: 127.0.0.1" \
-	-H "X-Remote-Addr: 127.0.0.1" \
-	-H "X-Forwarded-For: 127.0.0.1" \
-	-H "X-Originating-IP: 127.0.0.1"
-grep -R '^\[javascript\]' $OUTPUT_DIR/gospider/ | grep $DOMAIN | awk -F' ' '{ print $3 }' | sort -u | tee -a $OUTPUT_DIR/gospider-js.txt
-sleep 300
-
-# Find endpoints in JS files
+# find secrets in JS files
 echo -e "${MAGENTA}${BOLD}##############################################${END}${END}"
 echo -e "${MAGENTA}${BOLD}### ${YELLOW}[+] LOADING: subdomainizer${END}${END}${END}"
 echo -e "${MAGENTA}${BOLD}##############################################${END}${END}"
 sleep 3
 
 mkdir $OUTPUT_DIR/subdomainizer/
-subdomainizer -l $OUTPUT_DIR/gospider-js.txt -g -gt $GIT -k -d $DOMAIN -sop $OUTPUT_DIR/subdomainizer/secrets.txt -cop $OUTPUT_DIR/subdomainizer/clouds.txt -o $OUTPUT_DIR/subdomainizer/subs.txt
+subdomainizer \
+	-g \
+	-k \
+	-d $DOMAIN \
+	-l $OUTPUT_DIR/gospider-js.txt \
+	-o $OUTPUT_DIR/subdomainizer/subs.txt \
+	-cop $OUTPUT_DIR/subdomainizer/clouds.txt \
+	-sop $OUTPUT_DIR/subdomainizer/secrets.txt \
 sleep 300
 
-# Find endpoints in JS files
+# find endpoints in JS files
 echo -e "${MAGENTA}${BOLD}##############################################${END}${END}"
 echo -e "${MAGENTA}${BOLD}### ${YELLOW}[+] LOADING: linkfinder${END}${END}${END}"
 echo -e "${MAGENTA}${BOLD}##############################################${END}${END}"
@@ -283,45 +339,37 @@ rm $OUTPUT_DIR/wordlists/linkfinder.tmp
 sleep 300
 
 # smuggler
-echo -e "${MAGENTA}${BOLD}###############################################${END}${END}"
-echo -e "${MAGENTA}${BOLD}### ${YELLOW}[+] LOADING: smuggler${END}${END}${END}"
-echo -e "${MAGENTA}${BOLD}###############################################${END}${END}"
+#echo -e "${MAGENTA}${BOLD}###############################################${END}${END}"
+#echo -e "${MAGENTA}${BOLD}### ${YELLOW}[+] LOADING: smuggler${END}${END}${END}"
+#echo -e "${MAGENTA}${BOLD}###############################################${END}${END}"
+#
+#mkdir $OUTPUT_DIR/smuggler
+#sudo smuggler -q -l $OUTPUT_DIR/smuggler/smuggler.out < $OUTPUT_DIR/httpx.txt
+#grep -i 'Potential' $OUTPUT_DIR/smuggler/smuggler.out > $OUTPUT_DIR/smuggler/smuggler.txt
+#rm $OUTPUT_DIR/smuggler/smuggler.out
+#sleep 300
 
-mkdir $OUTPUT_DIR/smuggler
-sudo smuggler -q -l $OUTPUT_DIR/smuggler/smuggler.txt < $OUTPUT_DIR/httpx.txt
-sleep 300
+# email START
+send_email
+echo -e "Subject: Scans done for ${DOMAIN} on $(cat /etc/hostname)" >> /tmp/email-template.txt
+ls -lah $OUTPUT_DIR/ >> /tmp/email-template.txt
 
-# ffuf
-echo -e "${MAGENTA}${BOLD}########################################${END}${END}"
-echo -e "${MAGENTA}${BOLD}### ${YELLOW}[+] LOADING: ffuf${END}${END}${END}"
-echo -e "${MAGENTA}${BOLD}########################################${END}${END}"
+echo -e "cors: $(jq .[].url $OUTPUT_DIR/cors/cors.json | sort -u | wc --lines)" >> /tmp/email-template.txt
+jq .[].url $OUTPUT_DIR/cors/cors.json | sort -u >> /tmp/email-template.txt
+echo -e '' >> /tmp/email-template.txt
+
+#echo -e "smuggler: $(wc --lines $OUTPUT_DIR/smuggler/smuggler.txt)" >> /tmp/email-template.txt
+#cat $OUTPUT_DIR/smuggler/smuggler.txt >> /tmp/email-template.txt
+#echo -e '' >> /tmp/email-template.txt
+
+echo -e "nuclei: $(wc --lines $OUTPUT_DIR/nuclei/nuclei.txt)" >> /tmp/email-template.txt
+cat $OUTPUT_DIR/nuclei/nuclei.txt >> /tmp/email-template.txt
+echo -e '' >> /tmp/email-template.txt
+
+sendmail $EMAIL < /tmp/email-template.txt
+rm /tmp/email-template.txt
 sleep 3
-
-mkdir $OUTPUT_DIR/brute
-for URL in $(cat $OUTPUT_DIR/httpx.txt)
-do
-	domain_name=$(echo $URL | sed -E 's/(http:\/\/|https:\/\/)//g')
-	echo -e "${MAGENTA}${BOLD}Trying: $domain_name$END$END"
-	ffuf \
-		-H "X-Remote-IP: 127.0.0.1" \
-		-H "X-Remote-Addr: 127.0.0.1" \
-		-H "X-Originating-IP: 127.0.0.1" \
-		-H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_6_8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.112 Safari/537.36 - (BUGCROWD: n30 / HACKERONE: mr_n30)' \
-		-s \
-		-D \
-		-fl 0,1,2,3,4 \
-		-mc 200 \
-		-timeout 0 \
-		-maxtime 15 \
-		-u $URL/FUZZ \
-		-e .txt,.php,/ \
-		-w $WORDLIST | tee -a $OUTPUT_DIR/brute/$domain_name.txt
-done
-
-# Email
-TYPE="Basic"
-send_email $TYPE $EMAIL $DOMAIN $OUTPUT_DIR
-sleep 3
+# email END
 
 # masscan
 echo -e "${MAGENTA}${BOLD}###########################################${END}${END}"
@@ -329,20 +377,37 @@ echo -e "${MAGENTA}${BOLD}### ${YELLOW}[+] LOADING: masscan${END}${END}${END}"
 echo -e "${MAGENTA}${BOLD}###########################################${END}${END}"
 sleep 3
 
-masscan -v --rate=100 -p$(cat $NMAP_TOP_PORTS) --open -oG $OUTPUT_DIR/masscan-output.gnmap -iL $OUTPUT_DIR/ips.txt
+mkdir $OUTPUT_DIR/masscan
+masscan -v --rate=10000 -p0-65535 --open -oG $OUTPUT_DIR/masscan/masscan-output.gnmap -iL $OUTPUT_DIR/ips.txt
 sleep 3
 
 # nmap
 echo -e "${MAGENTA}${BOLD}########################################${END}${END}"
-echo -e "${MAGENTA}${BOLD}### ${YELLOW}[+] LOADING: nmap${END}${END}${END}"
+echo -e "${MAGENTA}${BOLD}### ${YELLOW}[+] LOADING: nmap+naabu${END}${END}${END}"
 echo -e "${MAGENTA}${BOLD}########################################${END}${END}"
 sleep 3
 
 mkdir $OUTPUT_DIR/nmap
-PORTS=$(grep -ioE '[0-9]{1,5}/[a-z]+' $OUTPUT_DIR/masscan-output.gnmap | sort -u | awk -F'/' '{ print $1 }' | tr '\n' ',' | sed 's/,$//g')
-nmap -v -n -Pn --script default,vuln -sV -p$PORTS -oA $OUTPUT_DIR/nmap/nmap -iL $OUTPUT_DIR/all.txt
 
-# Begin screenshots
+grep -ioE '[0-9]{1,5}/[a-z]+' $OUTPUT_DIR/masscan/masscan-output.gnmap \
+| sort -u \
+| awk -F'/' '{ print $1 }' \
+| tr '\n' ',' \
+| sed 's/,$//g' > $OUTPUT_DIR/nmap/ports.txt
+
+naabu \
+	-v \
+	-stats \
+	-c 100 \
+	-verify \
+	-timeout 100 \
+	-scan-all-ips \
+	-iL $OUTPUT_DIR/all.txt \
+	-ports-file $OUTPUT_DIR/nmap/ports.txt \
+	-nmap-cli "-v -n --script default,vuln,vulners -sV -oA $OUTPUT_DIR/nmap/nmap"
+sleep 3
+
+# aquatone
 echo -e "${MAGENTA}${BOLD}############################################${END}${END}"
 echo -e "${MAGENTA}${BOLD}### ${YELLOW}[+] LOADING: aquatone${END}${END}${END}"
 echo -e "${MAGENTA}${BOLD}############################################${END}${END}"
@@ -351,7 +416,7 @@ sleep 3
 aquatone -chrome-path /usr/bin/chromium-browser -out $OUTPUT_DIR/aquatone -nmap < $OUTPUT_DIR/nmap/nmap.xml
 sleep 3
 
-# Begin screenshots
+# brutespray
 echo -e "${MAGENTA}${BOLD}############################################${END}${END}"
 echo -e "${MAGENTA}${BOLD}### ${YELLOW}[+] LOADING: brutespray${END}${END}${END}"
 echo -e "${MAGENTA}${BOLD}############################################${END}${END}"
@@ -361,7 +426,9 @@ mkdir $OUTPUT_DIR/brutespray
 brutespray --file $OUTPUT_DIR/nmap/nmap.gnmap --threads 5 --hosts 5 -c -o $OUTPUT_DIR/brutespray/
 sleep 3
 
-# Email
-TYPE="Port"
-send_email $TYPE $EMAIL $DOMAIN $OUTPUT_DIR
-exit 0
+# email
+send_email
+echo -e "Subject: Script finished for ${DOMAIN} on $(cat /etc/hostname)" >> /tmp/email-template.txt
+ls -lah $OUTPUT_DIR/ >> /tmp/email-template.txt
+sendmail $EMAIL < /tmp/email-template.txt
+rm /tmp/email-template.txt
